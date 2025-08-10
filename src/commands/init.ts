@@ -5,6 +5,7 @@ import { existsSync, readFileSync, writeFileSync } from 'fs'
 import path from 'path'
 import ora from 'ora'
 import { detectPackageManager, type PackageManager } from '../utils/packageManager.js'
+import { i18n, t, type Language } from '../i18n/index.js'
 
 export interface InitOptions {
   minimal?: boolean
@@ -22,15 +23,35 @@ export interface ProjectType {
 }
 
 export const initCommand = new Command('init')
-  .description('プロジェクトにMaestro設定を初期化')
-  .option('-m, --minimal', 'ミニマル設定で初期化')
-  .option('-p, --package-manager <manager>', 'パッケージマネージャーを指定 (pnpm/npm/yarn/none)')
-  .option('-t, --template <name>', 'テンプレートを指定')
-  .option('-y, --yes', 'プロンプトをスキップしてデフォルト値を使用')
+  .description('Initialize Maestro configuration for project / プロジェクトにMaestro設定を初期化')
+  .option('-m, --minimal', 'Initialize with minimal configuration / ミニマル設定で初期化')
+  .option(
+    '-p, --package-manager <manager>',
+    'Specify package manager (pnpm/npm/yarn/none) / パッケージマネージャーを指定'
+  )
+  .option('-t, --template <name>', 'Specify template / テンプレートを指定')
+  .option('-y, --yes', 'Skip prompts and use defaults / プロンプトをスキップしてデフォルト値を使用')
   .exitOverride()
   .action(async (options: InitOptions) => {
     try {
       console.log(chalk.cyan('🎼 Welcome to Maestro Setup!\n'))
+
+      // Language selection first (skip for --minimal or --yes)
+      if (!options.yes && !options.minimal) {
+        const { language } = await inquirer.prompt([
+          {
+            type: 'list',
+            name: 'language',
+            message: 'Select your preferred language / 使用する言語を選択してください',
+            choices: [
+              { name: 'English', value: 'en' },
+              { name: '日本語 (Japanese)', value: 'ja' },
+            ],
+            default: i18n.getLanguage(),
+          },
+        ])
+        i18n.setLanguage(language as Language)
+      }
 
       // 既存の.maestro.jsonチェック
       const configPath = path.join(process.cwd(), '.maestro.json')
@@ -40,12 +61,12 @@ export const initCommand = new Command('init')
             {
               type: 'confirm',
               name: 'overwrite',
-              message: '.maestro.json が既に存在します。上書きしますか？',
+              message: t('init.existingConfig'),
               default: false,
             },
           ])
           if (!overwrite) {
-            console.log(chalk.yellow('設定の初期化をキャンセルしました'))
+            console.log(chalk.yellow(t('init.configCancelled')))
             return
           }
         }
@@ -55,9 +76,10 @@ export const initCommand = new Command('init')
       const projectType = detectProjectType()
       console.log(
         chalk.gray(
-          `検出されたプロジェクト: ${projectType.name}${
-            projectType.detected ? ' ✅' : ' (自動検出なし)'
-          }\n`
+          t('init.detectedProject', {
+            type: projectType.name,
+            status: projectType.detected ? t('init.detectedStatus') : t('init.noAutoDetect'),
+          }) + '\n'
         )
       )
 
@@ -72,32 +94,30 @@ export const initCommand = new Command('init')
       }
 
       // 設定ファイルを書き込み
-      const spinner = ora('設定ファイルを作成中...').start()
+      const spinner = ora(t('init.creatingConfig')).start()
       try {
         writeFileSync(configPath, JSON.stringify(config, null, 2) + '\n')
-        spinner.succeed('✨ .maestro.json が作成されました！')
+        spinner.succeed(t('init.configCreated'))
       } catch (error) {
-        spinner.fail('設定ファイルの作成に失敗しました')
+        spinner.fail(t('init.configFailed'))
         throw error
       }
 
       // 使用方法の表示
-      console.log(chalk.green('\n🎉 Maestro の設定が完了しました！\n'))
-      console.log(chalk.cyan('次のステップ:'))
-      console.log(chalk.gray('  mst create <branch-name>  # 新しい演奏者を招集'))
-      console.log(chalk.gray('  mst list                  # 演奏者一覧を表示'))
-      console.log(chalk.gray('  mst --help               # その他のコマンドを確認'))
+      console.log(chalk.green('\n' + t('init.setupComplete') + '\n'))
+      console.log(chalk.cyan(t('init.nextSteps')))
+      console.log(chalk.gray('  ' + t('init.createCommand')))
+      console.log(chalk.gray('  ' + t('init.listCommand')))
+      console.log(chalk.gray('  ' + t('init.helpCommand')))
 
       const postCreate = config.postCreate as { commands?: string[] } | undefined
       if (postCreate?.commands && postCreate.commands.length > 0) {
         console.log(
-          chalk.yellow(
-            `\n💡 worktree作成時に自動で実行されるコマンド: ${postCreate.commands.join(', ')}`
-          )
+          chalk.yellow('\n' + t('init.autoCommands', { commands: postCreate.commands.join(', ') }))
         )
       }
     } catch (error) {
-      console.error(chalk.red('エラーが発生しました:'), error)
+      console.error(chalk.red(t('common.error') + ':'), error)
       process.exit(1)
     }
   })
@@ -185,6 +205,7 @@ export function detectProjectType(): ProjectType {
 
 export function createMinimalConfig() {
   return {
+    language: i18n.getLanguage(),
     worktrees: {
       path: '.git/orchestra-members',
     },
@@ -216,6 +237,7 @@ export function createDefaultConfig(
   }
 
   return {
+    language: i18n.getLanguage(),
     worktrees: {
       path: '.git/orchestra-members',
       branchPrefix: 'feature/',
@@ -229,7 +251,10 @@ export function createDefaultConfig(
       commands,
     },
     hooks: {
-      beforeDelete: 'echo "演奏者を削除します: $ORCHESTRA_MEMBER"',
+      beforeDelete:
+        i18n.getLanguage() === 'ja'
+          ? 'echo "演奏者を削除します: $ORCHESTRA_MEMBER"'
+          : 'echo "Removing orchestra member: $ORCHESTRA_MEMBER"',
     },
   }
 }
@@ -241,56 +266,56 @@ export async function createInteractiveConfig(
     {
       type: 'list',
       name: 'packageManager',
-      message: 'どのパッケージマネージャーを使用しますか？',
+      message: t('init.prompts.packageManager'),
       choices: [
         { name: 'pnpm', value: 'pnpm' },
         { name: 'npm', value: 'npm' },
         { name: 'yarn', value: 'yarn' },
-        { name: 'none (パッケージマネージャーを使用しない)', value: 'none' },
+        { name: t('init.prompts.packageManagerNone'), value: 'none' },
       ],
       default: projectType.packageManager || 'pnpm',
     },
     {
       type: 'input',
       name: 'worktreePath',
-      message: 'worktreeを作成するディレクトリは？',
+      message: t('init.prompts.worktreePath'),
       default: '.git/orchestra-members',
     },
     {
       type: 'input',
       name: 'branchPrefix',
-      message: 'ブランチ名のプレフィックスは？',
+      message: t('init.prompts.branchPrefix'),
       default: 'feature/',
     },
     {
       type: 'list',
       name: 'defaultEditor',
-      message: 'デフォルトのエディタは？',
+      message: t('init.prompts.defaultEditor'),
       choices: [
         { name: 'Cursor', value: 'cursor' },
         { name: 'VS Code', value: 'vscode' },
         { name: 'Vim', value: 'vim' },
-        { name: 'その他', value: 'other' },
+        { name: t('init.prompts.defaultEditorOther'), value: 'other' },
       ],
       default: 'cursor',
     },
     {
       type: 'confirm',
       name: 'autoSetup',
-      message: '依存関係の自動インストールを有効にしますか？',
+      message: t('init.prompts.autoSetup'),
       default: true,
     },
     {
       type: 'confirm',
       name: 'copyEnvFiles',
-      message: '環境ファイルをworktreeにコピーしますか？',
+      message: t('init.prompts.copyEnvFiles'),
       default: true,
       when: answers => answers.autoSetup,
     },
     {
       type: 'input',
       name: 'syncFiles',
-      message: 'コピーするファイルを指定 (カンマ区切り):',
+      message: t('init.prompts.syncFiles'),
       default: (projectType.syncFiles || ['.env']).join(', '),
       when: answers => answers.copyEnvFiles,
       filter: (input: string) =>
@@ -307,6 +332,7 @@ export async function createInteractiveConfig(
   }
 
   return {
+    language: i18n.getLanguage(),
     worktrees: {
       path: answers.worktreePath,
       branchPrefix: answers.branchPrefix,
@@ -320,7 +346,10 @@ export async function createInteractiveConfig(
       commands,
     },
     hooks: {
-      beforeDelete: 'echo "演奏者を削除します: $ORCHESTRA_MEMBER"',
+      beforeDelete:
+        i18n.getLanguage() === 'ja'
+          ? 'echo "演奏者を削除します: $ORCHESTRA_MEMBER"'
+          : 'echo "Removing orchestra member: $ORCHESTRA_MEMBER"',
     },
   }
 }

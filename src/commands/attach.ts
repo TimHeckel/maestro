@@ -6,8 +6,9 @@ import { GitWorktreeManager } from '../core/git.js'
 import { execa } from 'execa'
 import { spawn } from 'child_process'
 import { detectPackageManager } from '../utils/packageManager.js'
+import { t } from '../i18n/index.js'
 
-// 利用可能なブランチを取得
+// Get available branches
 async function getAvailableBranches(
   gitManager: GitWorktreeManager,
   includeRemote: boolean
@@ -30,13 +31,13 @@ async function getAvailableBranches(
   return availableBranches
 }
 
-// ブランチを選択
+// Select branch
 async function selectBranch(availableBranches: string[]): Promise<string> {
   const { selectedBranch } = await inquirer.prompt([
     {
       type: 'list',
       name: 'selectedBranch',
-      message: 'どのブランチから演奏者を招集しますか？',
+      message: t('attach.selectBranch'),
       choices: availableBranches.map(branch => ({
         name: branch.includes('origin/')
           ? `${chalk.yellow('[remote]')} ${chalk.cyan(branch)}`
@@ -49,14 +50,14 @@ async function selectBranch(availableBranches: string[]): Promise<string> {
   return selectedBranch
 }
 
-// ブランチの存在を確認
+// Validate branch exists
 function validateBranchExists(branchName: string, availableBranches: string[]): void {
   if (!availableBranches.includes(branchName)) {
-    console.error(chalk.red(`エラー: ブランチ '${branchName}' が見つかりません`))
+    console.error(chalk.red(t('attach.branchNotFound', { branch: branchName })))
 
     const similarBranches = availableBranches.filter(b => b.includes(branchName))
     if (similarBranches.length > 0) {
-      console.log(chalk.yellow('\n利用可能なブランチ:'))
+      console.log(chalk.yellow(t('attach.availableBranches')))
       similarBranches.forEach(branch => {
         console.log(`  - ${chalk.cyan(branch)}`)
       })
@@ -66,45 +67,45 @@ function validateBranchExists(branchName: string, availableBranches: string[]): 
   }
 }
 
-// 環境セットアップを実行
+// Setup environment
 async function setupEnvironment(worktreePath: string): Promise<void> {
   const packageManager = detectPackageManager(worktreePath)
-  const setupSpinner = ora('環境をセットアップ中...').start()
+  const setupSpinner = ora(t('attach.settingUpEnvironment')).start()
 
   try {
     await execa(packageManager, ['install'], { cwd: worktreePath })
-    setupSpinner.succeed(`${packageManager} install 完了`)
+    setupSpinner.succeed(t('attach.setupComplete', { manager: packageManager }))
   } catch {
-    setupSpinner.warn(`${packageManager} install をスキップ`)
+    setupSpinner.warn(t('attach.setupSkipped', { manager: packageManager }))
   }
 }
 
-// エディタで開く
+// Open in editor
 async function openInEditor(worktreePath: string): Promise<void> {
-  const openSpinner = ora('エディタで開いています...').start()
+  const openSpinner = ora(t('attach.openingInEditor')).start()
   try {
     await execa('cursor', [worktreePath])
-    openSpinner.succeed('Cursorで開きました')
+    openSpinner.succeed(t('attach.openedInCursor'))
   } catch {
     try {
       await execa('code', [worktreePath])
-      openSpinner.succeed('VSCodeで開きました')
+      openSpinner.succeed(t('attach.openedInVSCode'))
     } catch {
-      openSpinner.warn('エディタが見つかりません')
+      openSpinner.warn(t('attach.editorNotFound'))
     }
   }
 }
 
 export const attachCommand = new Command('attach')
   .alias('a')
-  .description('既存のブランチから演奏者を招集する')
-  .argument('[branch-name]', 'ブランチ名（省略時は選択）')
-  .option('-r, --remote', 'リモートブランチも含める')
-  .option('-f, --fetch', '最初にfetchを実行')
-  .option('-o, --open', 'VSCode/Cursorで開く')
-  .option('-s, --setup', '環境セットアップを実行')
-  .option('--shell', 'アタッチ後にシェルに入る')
-  .option('--exec <command>', 'アタッチ後にコマンドを実行')
+  .description(t('attach.summoning'))
+  .argument('[branch-name]', t('shell.branchNameArg'))
+  .option('-r, --remote', 'Include remote branches')
+  .option('-f, --fetch', 'Fetch first')
+  .option('-o, --open', 'Open in VSCode/Cursor')
+  .option('-s, --setup', 'Run environment setup')
+  .option('--shell', 'Enter shell after attach')
+  .option('--exec <command>', 'Execute command after attach')
   .exitOverride()
   .action(
     async (
@@ -118,29 +119,29 @@ export const attachCommand = new Command('attach')
         exec?: string
       } = {}
     ) => {
-      const spinner = ora('オーケストレーション！').start()
+      const spinner = ora(t('attach.orchestration')).start()
 
       try {
         const gitManager = new GitWorktreeManager()
 
-        // Gitリポジトリかチェック
+        // Check if Git repository
         const isGitRepo = await gitManager.isGitRepository()
         if (!isGitRepo) {
-          spinner.fail('このディレクトリはGitリポジトリではありません')
+          spinner.fail(t('errors.notGitRepo'))
           process.exit(1)
         }
 
         if (options?.fetch) {
-          spinner.text = 'リモートから最新情報を取得中...'
+          spinner.text = t('attach.fetchingLatest')
           await gitManager.fetchAll()
         }
 
-        spinner.text = 'ブランチ一覧を取得中...'
+        spinner.text = t('attach.fetchingBranches')
         const availableBranches = await getAvailableBranches(gitManager, options?.remote || false)
 
         if (availableBranches.length === 0) {
-          spinner.fail('利用可能なブランチがありません')
-          console.log(chalk.yellow('すべてのブランチは既に演奏者として存在します'))
+          spinner.fail(t('attach.noAvailableBranches'))
+          console.log(chalk.yellow(t('attach.allBranchesAttached')))
           process.exit(0)
         }
 
@@ -152,14 +153,13 @@ export const attachCommand = new Command('attach')
           validateBranchExists(branchName, availableBranches)
         }
 
-        spinner.start(`演奏者を招集中...`)
+        spinner.start(t('attach.summoningMember'))
 
-        // ワークツリーを作成
+        // Create worktree
         const worktreePath = await gitManager.attachWorktree(branchName || '')
 
         spinner.succeed(
-          `演奏者 '${chalk.cyan(branchName)}' を招集しました！\n` +
-            `  📁 ${chalk.gray(worktreePath)}`
+          t('attach.memberSummoned', { branch: chalk.cyan(branchName), path: chalk.gray(worktreePath) })
         )
 
         if (options?.setup) {
@@ -170,9 +170,9 @@ export const attachCommand = new Command('attach')
           await openInEditor(worktreePath)
         }
 
-        // --execオプションの処理
+        // --exec option handling
         if (options?.exec) {
-          console.log(chalk.cyan(`\n🎵 コマンドを実行中: ${options.exec}`))
+          console.log(chalk.cyan(t('attach.executingCommand', { command: options.exec })))
           try {
             await execa(options.exec, [], {
               cwd: worktreePath,
@@ -182,16 +182,16 @@ export const attachCommand = new Command('attach')
           } catch (error) {
             console.error(
               chalk.red(
-                `コマンドの実行に失敗しました: ${error instanceof Error ? error.message : '不明なエラー'}`
+                t('attach.commandFailed', { error: error instanceof Error ? error.message : t('errors.general') })
               )
             )
             process.exit(1)
           }
         }
 
-        // --shellオプションの処理
+        // --shell option handling
         if (options?.shell) {
-          console.log(chalk.cyan('\n🎵 シェルに入ります...'))
+          console.log(chalk.cyan(t('attach.enteringShell')))
           const shell = process.env.SHELL || '/bin/bash'
           const child = spawn(shell, [], {
             cwd: worktreePath,
@@ -205,22 +205,22 @@ export const attachCommand = new Command('attach')
           })
 
           child.on('exit', () => {
-            console.log(chalk.gray('\nシェルから退出しました'))
+            console.log(chalk.gray(t('attach.exitedShell')))
           })
 
-          // プロセスが終了するまで待つ
+          // Wait for process to exit
           await new Promise<void>(resolve => {
             child.on('exit', resolve)
           })
         }
 
         if (!options?.shell && !options?.exec) {
-          console.log(chalk.green('\n✨ 演奏者の招集が完了しました！'))
-          console.log(chalk.gray(`\ncd ${worktreePath} で移動できます`))
+          console.log(chalk.green(t('attach.summonComplete')))
+          console.log(chalk.gray(t('attach.moveToDirectory', { path: worktreePath })))
         }
       } catch (error) {
-        spinner.fail('演奏者を招集できませんでした')
-        console.error(chalk.red(error instanceof Error ? error.message : '不明なエラー'))
+        spinner.fail(t('attach.memberNotSummoned'))
+        console.error(chalk.red(error instanceof Error ? error.message : t('errors.general')))
         process.exit(1)
       }
     }

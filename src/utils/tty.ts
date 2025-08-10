@@ -6,12 +6,15 @@ import { NativeTmuxHelper } from './nativeTmux.js'
  * This function uses direct tmux commands to solve TTY corruption issues.
  * It uses spawn with stdio: 'inherit' and process.exit() for proper TTY control.
  *
- * Note: This function never returns when successful, as the process exits.
+ * @param sessionName - The name of the tmux session to attach to
+ * @param exitOnDetach - If false, returns normally when user detaches. If true, exits the process.
  */
-export async function attachToTmuxWithProperTTY(sessionName: string): Promise<void> {
+export async function attachToTmuxWithProperTTY(
+  sessionName: string,
+  exitOnDetach: boolean = true
+): Promise<void> {
   // Use the improved native helper which directly calls tmux
-  // This call never returns on success due to process.exit()
-  await NativeTmuxHelper.attachToSession(sessionName)
+  await NativeTmuxHelper.attachToSession(sessionName, exitOnDetach)
 }
 
 /**

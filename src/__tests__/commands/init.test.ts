@@ -195,6 +195,7 @@ describe('init command', () => {
         const config = createMinimalConfig()
 
         expect(config).toEqual({
+          language: 'ja', // Default language
           worktrees: {
             path: '.git/orchestra-members',
           },
@@ -218,6 +219,7 @@ describe('init command', () => {
 
         const config = createDefaultConfig(projectType)
 
+        expect(config.language).toEqual('ja') // Default language
         expect(config.worktrees).toEqual({
           path: '.git/orchestra-members',
           branchPrefix: 'feature/',
@@ -243,6 +245,7 @@ describe('init command', () => {
 
         const config = createDefaultConfig(projectType, 'yarn')
 
+        expect(config.language).toEqual('ja') // Default language
         expect((config.postCreate as any).commands).toEqual(['yarn install'])
       })
 
@@ -257,6 +260,7 @@ describe('init command', () => {
 
         const config = createDefaultConfig(projectType)
 
+        expect(config.language).toEqual('ja') // Default language
         expect((config.postCreate as any).commands).toEqual(['pip install -r requirements.txt'])
       })
     })

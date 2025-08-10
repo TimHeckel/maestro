@@ -8,6 +8,7 @@ import { execa } from 'execa'
 import { spawn } from 'child_process'
 import { ConfigManager, Config } from '../core/config.js'
 import { formatPath } from '../utils/path.js'
+import { t } from '../i18n/index.js'
 
 // エラークラス
 class DeleteCommandError extends Error {
@@ -51,30 +52,30 @@ export async function getDirectorySize(dirPath: string): Promise<string> {
   }
 }
 
-// リモートブランチを削除する関数
+// Delete remote branch
 export async function deleteRemoteBranch(branchName: string): Promise<void> {
-  const remoteSpinner = ora('リモートブランチを削除中...').start()
+  const remoteSpinner = ora(t('delete.remoteBranchDeleting')).start()
 
   try {
-    // リモートブランチが存在するか確認
+    // Check if remote branch exists
     const { stdout: remoteBranches } = await execa('git', ['branch', '-r'])
     const remoteBranchName = `origin/${branchName}`
 
     if (!remoteBranches.includes(remoteBranchName)) {
-      remoteSpinner.warn(`リモートブランチ '${remoteBranchName}' は存在しません`)
+      remoteSpinner.warn(t('delete.remoteBranchNotFound', { branch: remoteBranchName }))
       return
     }
 
-    // リモートブランチを削除
+    // Delete remote branch
     await execa('git', ['push', 'origin', '--delete', branchName])
-    remoteSpinner.succeed(`リモートブランチ '${chalk.cyan(remoteBranchName)}' を削除しました`)
+    remoteSpinner.succeed(t('delete.remoteBranchDeleted', { branch: chalk.cyan(remoteBranchName) }))
   } catch (error) {
-    remoteSpinner.fail('リモートブランチの削除に失敗しました')
-    throw new DeleteCommandError(error instanceof Error ? error.message : '不明なエラー')
+    remoteSpinner.fail(t('delete.remoteBranchFailed'))
+    throw new DeleteCommandError(error instanceof Error ? error.message : t('errors.general'))
   }
 }
 
-// ワークツリー選択の前処理を行う純粋関数
+// Prepare worktree selection
 export function prepareWorktreeSelection(
   worktrees: Worktree[],
   branchName?: string,
@@ -89,7 +90,7 @@ export function prepareWorktreeSelection(
     return { filteredWorktrees: [], needsInteractiveSelection: false }
   }
 
-  // 現在のworktreeを削除する場合
+  // Delete current worktree
   if (options.current) {
     const currentWorktree = orchestraMembers.find(wt => process.cwd().startsWith(wt.path))
     if (currentWorktree) {
@@ -97,14 +98,14 @@ export function prepareWorktreeSelection(
     }
   }
 
-  // ブランチ名が指定されている場合
+  // Branch name specified
   if (branchName && !options.fzf) {
-    // ワイルドカードパターンのチェック
+    // Check wildcard pattern
     if (branchName.includes('*')) {
-      // パターンを正規表現に変換
+      // Convert pattern to regex
       const pattern = branchName
-        .replace(/[.+?^${}()|[\]\\]/g, '\\$&') // 特殊文字をエスケープ
-        .replace(/\*/g, '.*') // * を .* に置換
+        .replace(/[.+?^${}()|[\]\\]/g, '\\$&') // Escape special characters
+        .replace(/\*/g, '.*') // Replace * with .*
       const regex = new RegExp(`^(refs/heads/)?${pattern}$`)
 
       const matchedWorktrees = orchestraMembers.filter(wt => {
@@ -116,7 +117,7 @@ export function prepareWorktreeSelection(
         return { filteredWorktrees: matchedWorktrees, needsInteractiveSelection: false }
       }
     } else {
-      // 通常の完全一致
+      // Normal exact match
       const targetWorktree = orchestraMembers.find(
         wt => wt.branch === branchName || wt.branch === `refs/heads/${branchName}`
       )
@@ -126,14 +127,14 @@ export function prepareWorktreeSelection(
     }
   }
 
-  // fzfで選択、またはインタラクティブ選択が必要
+  // Need fzf or interactive selection
   return {
     filteredWorktrees: orchestraMembers,
     needsInteractiveSelection: true,
   }
 }
 
-// ワークツリー削除の安全性チェックを行う純粋関数
+// Validate worktree deletion safety
 export function validateWorktreeDeletion(
   worktree: Worktree,
   options: { force?: boolean } = {}
@@ -145,17 +146,17 @@ export function validateWorktreeDeletion(
   const warnings: string[] = []
   let requiresConfirmation = false
 
-  // ロックされているかチェック
+  // Check if locked
   if (worktree.locked) {
-    warnings.push(`ワークツリーがロックされています: ${worktree.path}`)
+    warnings.push(`Worktree is locked: ${worktree.path}`)
   }
 
-  // 削除可能かチェック
+  // Check if prunable
   if (worktree.prunable) {
-    warnings.push(`削除可能なワークツリーです: ${worktree.path}`)
+    warnings.push(`Prunable worktree: ${worktree.path}`)
   }
 
-  // 強制削除フラグがない場合は確認が必要
+  // Require confirmation if no force flag
   if (!options.force && warnings.length > 0) {
     requiresConfirmation = true
   }
@@ -167,32 +168,32 @@ export function validateWorktreeDeletion(
   }
 }
 
-// ワークツリー削除の実行処理を行う純粋関数
+// Execute worktree deletion
 export async function executeWorktreeDeletion(
   gitManager: GitWorktreeManager,
   worktree: Worktree,
   options: { force?: boolean; removeRemote?: boolean } = {}
 ): Promise<{ success: boolean; branchName?: string }> {
   try {
-    // ブランチ名を取得
+    // Get branch name
     const branchName = worktree.branch?.replace('refs/heads/', '') || worktree.branch
 
-    // ワークツリーを削除
+    // Delete worktree
     await gitManager.deleteWorktree(branchName!, options.force)
 
     return { success: true, branchName }
   } catch (error) {
-    throw new DeleteCommandError(error instanceof Error ? error.message : '不明なエラー')
+    throw new DeleteCommandError(error instanceof Error ? error.message : t('errors.general'))
   }
 }
 
-// 現在のディレクトリが指定されたworktree内にあるかチェック
+// Check if current directory is in specified worktree
 export function isCurrentDirectoryInWorktree(worktreePath: string): boolean {
   const currentDir = process.cwd()
   return currentDir.startsWith(worktreePath)
 }
 
-// fzfを使用してワークツリーを選択
+// Select worktrees with fzf
 async function selectWorktreesWithFzf(
   filteredWorktrees: Worktree[],
   options: { force?: boolean } = {}
@@ -200,8 +201,8 @@ async function selectWorktreesWithFzf(
   const fzfInput = filteredWorktrees
     .map(w => {
       const status = []
-      if (w.locked) status.push(chalk.red('ロック'))
-      if (w.prunable) status.push(chalk.yellow('削除可能'))
+      if (w.locked) status.push(chalk.red(t('delete.locked')))
+      if (w.prunable) status.push(chalk.yellow(t('delete.prunable')))
 
       const statusStr = status.length > 0 ? ` [${status.join(', ')}]` : ''
       const branch = w.branch?.replace('refs/heads/', '') || w.branch

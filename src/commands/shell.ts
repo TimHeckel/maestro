@@ -10,6 +10,7 @@ import { startTmuxShell, isInTmuxSession, TmuxPaneType } from '../utils/tmux.js'
 import { selectWorktreeWithFzf, isFzfAvailable } from '../utils/fzf.js'
 import { attachToTmuxWithProperTTY, createAndAttachTmuxSession } from '../utils/tty.js'
 import { formatPath } from '../utils/path.js'
+import { t } from '../i18n/index.js'
 
 interface ShellOptions {
   fzf?: boolean
@@ -21,19 +22,19 @@ interface ShellOptions {
 
 export const shellCommand = new Command('shell')
   .alias('sh')
-  .description('演奏者のシェルに入る')
-  .argument('[branch-name]', 'ブランチ名（省略時は選択）')
-  .option('--fzf', 'fzfで選択')
-  .option('--cmd <command>', '指定コマンド実行して終了')
-  .option('-t, --tmux', '既存tmuxセッションにアタッチ（存在しなければ作成）')
-  .option('--tmux-vertical, --tmux-v', 'tmuxの縦分割ペインでシェルを開始')
-  .option('--tmux-horizontal, --tmux-h', 'tmuxの横分割ペインでシェルを開始')
+  .description(t('shell.enteringMemberShell'))
+  .argument('[branch-name]', t('shell.branchNameArg'))
+  .option('--fzf', t('shell.selectWithFzf'))
+  .option('--cmd <command>', t('shell.runCommandAndExit'))
+  .option('-t, --tmux', t('shell.attachExistingTmux'))
+  .option('--tmux-vertical, --tmux-v', t('shell.tmuxVerticalSplit'))
+  .option('--tmux-horizontal, --tmux-h', t('shell.tmuxHorizontalSplit'))
   .exitOverride()
   .action(async (branchName?: string, options: ShellOptions = {}) => {
     try {
       const gitManager = new GitWorktreeManager()
 
-      // Gitリポジトリかチェック
+      // Check if Git repository
       const isGitRepo = await gitManager.isGitRepository()
       if (!isGitRepo) {
         throw ErrorFactory.notGitRepository()
@@ -41,59 +42,59 @@ export const shellCommand = new Command('shell')
 
       const worktrees = await gitManager.listWorktrees()
 
-      // メインブランチを除外
+      // Exclude main branch
       const orchestraMembers = worktrees.filter(wt => !wt.path.endsWith('.'))
 
       if (orchestraMembers.length === 0) {
-        console.log(chalk.yellow('演奏者が存在しません'))
-        console.log(chalk.gray('maestro create <branch-name> で演奏者を招集してください'))
+        console.log(chalk.yellow(t('shell.noMembers')))
+        console.log(chalk.gray(t('shell.createHint')))
         process.exit(0)
       }
 
-      // tmuxオプションの検証
+      // Validate tmux options
       const tmuxOptionsCount = [options.tmux, options.tmuxVertical, options.tmuxHorizontal].filter(
         Boolean
       ).length
       if (tmuxOptionsCount > 1) {
-        console.error(chalk.red('エラー: tmuxオプションは一つだけ指定してください'))
+        console.error(chalk.red(t('shell.errorTmuxOptions')))
         process.exit(1)
       }
 
       const isUsingTmux = options.tmux || options.tmuxVertical || options.tmuxHorizontal
       if (isUsingTmux && !(await isInTmuxSession())) {
         console.error(
-          chalk.red('エラー: tmuxオプションを使用するにはtmuxセッション内にいる必要があります')
+          chalk.red(t('shell.errorTmuxRequired'))
         )
         process.exit(1)
       }
 
-      // ブランチ名が指定されていない場合またはfzfオプションが指定された場合
+      // Branch name not specified or fzf option specified
       if (!branchName || options?.fzf) {
         if (options?.fzf) {
-          // fzfの利用可能性をチェック
+          // Check fzf availability
           if (!(await isFzfAvailable())) {
-            console.error(chalk.red('エラー: fzfがインストールされていません'))
+            console.error(chalk.red(t('shell.errorFzfNotInstalled')))
             process.exit(1)
           }
 
           const selectedBranch = await selectWorktreeWithFzf(
             orchestraMembers,
-            'シェルに入る演奏者を選択 (Ctrl-C でキャンセル)'
+            t('shell.selectMemberShell')
           )
 
           if (!selectedBranch) {
-            console.log(chalk.gray('キャンセルされました'))
+            console.log(chalk.gray(t('common.cancel')))
             process.exit(0)
           }
 
           branchName = selectedBranch
         } else {
-          // inquirerで選択
+          // Select with inquirer
           const { selectedBranch } = await inquirer.prompt([
             {
               type: 'list',
               name: 'selectedBranch',
-              message: 'どの演奏者に入りますか？',
+              message: t('shell.whichMemberEnter'),
               choices: orchestraMembers.map(wt => {
                 const branchName = wt.branch?.replace('refs/heads/', '') || wt.branch
                 const configManager = new ConfigManager()
@@ -109,14 +110,14 @@ export const shellCommand = new Command('shell')
         }
       }
 
-      // 指定されたブランチのworktreeを探す
+      // Find worktree for specified branch
       const targetWorktree = orchestraMembers.find(wt => {
         const branch = wt.branch?.replace('refs/heads/', '')
         return branch === branchName || wt.branch === branchName
       })
 
       if (!targetWorktree) {
-        // 類似した名前を検索
+        // Search for similar names
         const similarBranches = orchestraMembers
           .filter(
             wt => wt.branch && wt.branch.toLowerCase().includes((branchName || '').toLowerCase())
@@ -130,12 +131,12 @@ export const shellCommand = new Command('shell')
       const configManager = new ConfigManager()
       await configManager.loadProjectConfig()
       const config = configManager.getAll()
-      console.log(chalk.green(`\n🎼 演奏者 '${chalk.cyan(branchName)}' に入ります...`))
+      console.log(chalk.green(t('shell.enteringMember', { branch: chalk.cyan(branchName) })))
       console.log(chalk.gray(`📁 ${formatPath(targetWorktree.path, config)}\n`))
 
-      // --cmd オプションの処理
+      // --cmd option handling
       if (options.cmd) {
-        console.log(chalk.blue(`🔧 コマンド実行: ${options.cmd}`))
+        console.log(chalk.blue(t('shell.executingCommand', { command: options.cmd })))
         try {
           const result = await execa(options.cmd, [], {
             cwd: targetWorktree.path,
@@ -147,11 +148,11 @@ export const shellCommand = new Command('shell')
               MAESTRO_PATH: targetWorktree.path,
             },
           })
-          console.log(chalk.green(`\n✅ コマンド実行完了 (exit code: ${result.exitCode})`))
+          console.log(chalk.green(t('shell.commandComplete', { code: result.exitCode || 0 })))
         } catch (error) {
           console.error(
             chalk.red(
-              `❌ コマンド実行失敗: ${error instanceof Error ? error.message : '不明なエラー'}`
+              t('shell.commandFailed', { error: error instanceof Error ? error.message : t('errors.general') })
             )
           )
           process.exit(1)
@@ -159,18 +160,18 @@ export const shellCommand = new Command('shell')
         return
       }
 
-      // tmuxオプションの処理
+      // tmux option handling
       if (isUsingTmux) {
         let paneType: TmuxPaneType = 'new-window'
         if (options.tmuxVertical) paneType = 'vertical-split'
         if (options.tmuxHorizontal) paneType = 'horizontal-split'
 
-        // --tmux オプション（既存のセッション管理）の処理
+        // --tmux option (existing session management) handling
         if (options.tmux) {
           const sessionName = `maestro-${branchName}`
 
           try {
-            // 既存のtmuxセッションがあるかチェック
+            // Check if existing tmux session exists
             const existingSessions = await execa(
               'tmux',
               ['list-sessions', '-F', '#{session_name}'],
@@ -184,34 +185,35 @@ export const shellCommand = new Command('shell')
               .some(name => name.trim() === sessionName)
 
             if (sessionExists) {
-              console.log(chalk.blue(`📺 既存のtmuxセッション '${sessionName}' にアタッチします`))
+              console.log(chalk.blue(t('shell.attachingExistingTmux', { session: sessionName })))
               await attachToTmuxWithProperTTY(sessionName)
-              console.log(chalk.gray('\ntmuxセッションから戻りました'))
+              console.log(chalk.gray(t('shell.returnedFromTmux')))
             } else {
-              console.log(chalk.blue(`📺 新しいtmuxセッション '${sessionName}' を作成します`))
+              console.log(chalk.blue(t('shell.creatingNewTmux', { session: sessionName })))
 
-              // 環境変数を設定
+              // Set environment variables
               process.env.MAESTRO_BRANCH = branchName
               process.env.MAESTRO_PATH = targetWorktree.path
 
               await createAndAttachTmuxSession(sessionName, targetWorktree.path)
-              console.log(chalk.gray('\ntmuxセッションから戻りました'))
+              console.log(chalk.gray(t('shell.returnedFromTmux')))
             }
           } catch (error) {
             console.error(
               chalk.red(
-                `❌ tmuxセッション処理に失敗: ${error instanceof Error ? error.message : '不明なエラー'}`
+                t('shell.tmuxFailed', { error: error instanceof Error ? error.message : t('errors.general') })
               )
             )
-            console.log(chalk.yellow('通常のシェルで起動します...'))
-            // tmuxが失敗した場合は通常のシェルで起動
+            console.log(chalk.yellow(t('shell.fallingBackToShell')))
+            // Fall back to normal shell if tmux fails
             startNormalShell()
           }
           return
         } else {
-          // --tmux-v, --tmux-h オプションの処理
+          // --tmux-v, --tmux-h option handling
+          const paneTypeDisplay = paneType === 'vertical-split' ? 'vertical' : 'horizontal'
           console.log(
-            chalk.green(`\n🎼 演奏者 '${chalk.cyan(branchName)}' でtmux ${paneType}シェルを開始`)
+            chalk.green(t('shell.startingTmuxPane', { branch: chalk.cyan(branchName), type: paneTypeDisplay }))
           )
           console.log(chalk.gray(`📁 ${formatPath(targetWorktree.path, config)}\n`))
 
@@ -225,31 +227,31 @@ export const shellCommand = new Command('shell')
           } catch (error) {
             console.error(
               chalk.red(
-                `❌ tmux ${paneType}の起動に失敗: ${error instanceof Error ? error.message : '不明なエラー'}`
+                t('shell.tmuxPaneFailed', { type: paneTypeDisplay, error: error instanceof Error ? error.message : t('errors.general') })
               )
             )
-            console.log(chalk.yellow('通常のシェルで起動します...'))
-            // tmuxが失敗した場合は通常のシェルで起動
+            console.log(chalk.yellow(t('shell.fallingBackToShell')))
+            // Fall back to normal shell if tmux fails
             startNormalShell()
           }
           return
         }
       }
 
-      // 通常のシェル起動
+      // Normal shell launch
       startNormalShell()
 
       function startNormalShell() {
         if (!targetWorktree) {
-          console.error(chalk.red('エラー: targetWorktreeが未定義です'))
+          console.error(chalk.red(t('shell.errorTargetUndefined')))
           process.exit(1)
         }
 
-        // シェルを自動判定
+        // Auto-detect shell
         const shell = getShell()
         const shellEnv = getShellEnv(shell, branchName!)
 
-        console.log(chalk.blue(`🐚 シェル: ${shell}`))
+        console.log(chalk.blue(t('shell.shellType', { shell })))
         const shellProcess = spawn(shell, [], {
           cwd: targetWorktree.path,
           stdio: 'inherit',
@@ -262,7 +264,7 @@ export const shellCommand = new Command('shell')
         })
 
         shellProcess.on('exit', code => {
-          console.log(chalk.gray(`\n演奏者から戻りました (exit code: ${code})`))
+          console.log(chalk.gray(t('shell.returnedFromMember', { code: code || 0 })))
         })
       }
 

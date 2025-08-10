@@ -48,6 +48,7 @@ Maestro is a CLI that makes Git worktree management intuitive. When working on m
 | 🤖 **Claude AI**          | AI diff reviews & code suggestions                  |
 | 🔗 **GitHub integration** | Reliable worktree creation from Issues / PRs with rich metadata |
 | 🎯 **tmux / fzf**         | Keyboard-only, lightning-fast switching             |
+| 🌐 **Multi-language**     | Full English and Japanese interface support         |
 | 📊 **Status**             | Real-time worktree status and health monitoring     |
 | 🔄 **Auto Sync**          | Propagate file changes in real time                 |
 | 📸 **Snapshot**           | Save / restore any state with one command           |
@@ -120,8 +121,8 @@ brew install camoneart/tap/maestro
 cd ~/path/to/your-repo
 
 # 2.5. Initialize maestro for your project (NEW!)
-mst init                                      # Interactive setup
-# or: mst init --yes                          # Quick setup with defaults
+mst init                                      # Interactive setup with language selection (English/Japanese)
+# or: mst init --yes                          # Quick setup with defaults (auto-detects language)
 
 # 3. Create a performer (worktree)
 mst create feature/awesome-feature            # create only
@@ -141,6 +142,45 @@ mst create feature/awesome-feature --tmux --claude-md
 - `--tmux-h`/`--tmux-v` splits the current tmux pane horizontally/vertically with improved focus management (focuses first pane) and unified pane titles.
 - `--tmux-h-panes <number>`/`--tmux-v-panes <number>` creates multiple horizontal/vertical panes with specified count, all displaying consistent branch name titles.
 - `--tmux-layout <type>` applies specific tmux layout (even-horizontal, even-vertical, main-horizontal, main-vertical, tiled).
+
+#### Understanding tmux Multi-Pane Sessions
+
+When you use `--tmux-h-panes` or `--tmux-v-panes`, Maestro creates **ONE tmux session** with **multiple panes**, all working in the **SAME worktree directory**. This is perfect for parallel development workflows:
+
+```bash
+# Creates 1 tmux session with 4 panes, all in the same feature/api worktree
+mst create feature/api --tmux-h-panes 4 --tmux-layout tiled
+```
+
+**Common Use Cases for Multiple Panes:**
+- **Pane 1**: Code editor (vim/nvim)
+- **Pane 2**: Test runner (`npm test --watch`)
+- **Pane 3**: Development server (`npm run dev`)
+- **Pane 4**: Git operations and general commands
+
+All panes share the same worktree directory, so you're always working on the same feature branch. Navigate between panes with `Ctrl+B` then arrow keys. Detach from the session with `Ctrl+B, D` (the session continues running in the background).
+
+**NEW in v5.1.1: Enhanced tmux Experience** 🎯
+- **Automatic Help Display**: When creating multi-pane sessions or attaching, Maestro shows tmux navigation tips
+- **Easy Session Management**: Use `mst tmux-attach` (or `mst ta`) to easily reconnect to any tmux session
+- **Built-in Cheat Sheet**: Run `mst ta --help-tmux` to see the full tmux reference anytime
+- **Fixed Detachment**: When you detach (Ctrl+B, D), Maestro continues running and completes setup tasks
+- **Session Persistence**: Your tmux session remains active and can be re-attached with `mst ta <branch-name>`
+
+#### Language Support (NEW!)
+
+Maestro now supports both **English** and **Japanese** interfaces:
+
+- **First-time setup**: `mst init` prompts for your preferred language
+- **Auto-detection**: Detects language from system locale if not specified
+- **Persistent**: Language preference is saved in `.maestro.json` and global config
+- **Bilingual help**: All command descriptions show both languages
+
+Language priority order:
+1. Project `.maestro.json` setting
+2. Global `~/.maestro/config.json` setting  
+3. System locale (`$LANG` environment variable)
+4. Default: Japanese (for backward compatibility)
 
 ### Basic Usage Examples
 
@@ -171,6 +211,7 @@ See the full [Command Reference](./docs/COMMANDS.md).
 | `list`      | List worktrees               | `mst list`                     |
 | `delete`    | Orchestra members exit the stage with automatic tmux session cleanup | `mst delete feature/old --keep-session` |
 | `tmux`      | Open in tmux                 | `mst tmux`                     |
+| `tmux-attach` | Reconnect to tmux session (alias: `ta`) | `mst ta` or `mst ta --help-tmux` |
 | `sync`      | Real-time file sync          | `mst sync --auto`              |
 | `push`      | Push and create PR           | `mst push --pr`                |
 | `github`    | GitHub integration           | `mst github checkout 123`      |
@@ -185,6 +226,7 @@ All sub-commands and options are documented in the [Command Reference](./docs/CO
 mst create feature/my-ui --tmux --claude-md   # create + AI + tmux
 mst create feature/api --tmux-h-panes 3       # create + 3 horizontal panes (unified titles)
 mst create feature/tdd --tmux-h-panes 4 --tmux-layout tiled  # 4-pane grid layout
+# Note: Detaching (Ctrl+B, D) now properly returns control to mst without exiting
 mst list                                       # list performers
 mst tmux                                       # switch via fzf
 mst push --pr                                  # push with PR

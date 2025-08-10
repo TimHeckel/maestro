@@ -4,6 +4,7 @@ import chalk from 'chalk'
 import { readFileSync } from 'fs'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
+import { t } from './i18n/index.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const packageJson = JSON.parse(readFileSync(join(__dirname, '../package.json'), 'utf-8'))
@@ -17,6 +18,7 @@ import { configCommand } from './commands/config.js'
 import { githubCommand } from './commands/github.js'
 import { completionCommand } from './commands/completion.js'
 import { tmuxCommand } from './commands/tmux.js'
+import { tmuxAttachCommand } from './commands/tmux-attach.js'
 import { whereCommand } from './commands/where.js'
 import { syncCommand } from './commands/sync.js'
 import { reviewCommand } from './commands/review.js'
@@ -32,10 +34,10 @@ const program = new Command()
 
 program
   .name('maestro')
-  .description('🎼 Maestro - Git worktreeオーケストレーションでClaude Codeとパラレル開発')
+  .description(t('cli.description'))
   .version(packageJson.version)
 
-// サブコマンドを追加
+// Add subcommands
 program.addCommand(initCommand)
 program.addCommand(createCommand)
 program.addCommand(listCommand)
@@ -47,6 +49,7 @@ program.addCommand(configCommand)
 program.addCommand(githubCommand)
 program.addCommand(completionCommand)
 program.addCommand(tmuxCommand)
+program.addCommand(tmuxAttachCommand)
 program.addCommand(whereCommand)
 program.addCommand(syncCommand)
 program.addCommand(reviewCommand)
@@ -57,7 +60,7 @@ program.addCommand(healthCommand)
 program.addCommand(snapshotCommand)
 program.addCommand(pushCommand)
 
-// エラーハンドリング
+// Error handling
 program.exitOverride()
 
 interface CommanderError extends Error {
@@ -80,7 +83,7 @@ try {
     if (cmdErr.message === '(outputHelp)') {
       process.exit(0)
     }
-    console.error(chalk.red('エラー:'), error.message)
+    console.error(chalk.red(t('cli.error') + ':'), error.message)
   }
   process.exit(1)
 }

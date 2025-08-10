@@ -1,0 +1,458 @@
+import { TranslationKeys } from './en.js'
+
+export const ja: TranslationKeys = {
+  // Common
+  common: {
+    cancel: 'キャンセルされました',
+    error: 'エラー',
+    success: '成功',
+    yes: 'はい',
+    no: 'いいえ',
+  },
+
+  // Init command
+  init: {
+    welcome: '🎼 Welcome to Maestro Setup!',
+    existingConfig: '.maestro.json が既に存在します。上書きしますか？',
+    configCancelled: '設定の初期化をキャンセルしました',
+    detectedProject: '検出されたプロジェクト: {{type}}{{status}}',
+    detectedStatus: ' ✅',
+    noAutoDetect: ' (自動検出なし)',
+    creatingConfig: '設定ファイルを作成中...',
+    configCreated: '✨ .maestro.json が作成されました！',
+    configFailed: '設定ファイルの作成に失敗しました',
+    setupComplete: '🎉 Maestro の設定が完了しました！',
+    nextSteps: '次のステップ:',
+    createCommand: 'mst create <branch-name>  # 新しい演奏者を招集',
+    listCommand: 'mst list                  # 演奏者一覧を表示',
+    helpCommand: 'mst --help               # その他のコマンドを確認',
+    autoCommands: '💡 worktree作成時に自動で実行されるコマンド: {{commands}}',
+
+    // Prompts
+    prompts: {
+      language: '使用する言語を選択してください',
+      packageManager: 'どのパッケージマネージャーを使用しますか？',
+      packageManagerNone: 'none (パッケージマネージャーを使用しない)',
+      worktreePath: 'worktreeを作成するディレクトリは？',
+      branchPrefix: 'ブランチ名のプレフィックスは？',
+      defaultEditor: 'デフォルトのエディタは？',
+      defaultEditorOther: 'その他',
+      autoSetup: '依存関係の自動インストールを有効にしますか？',
+      copyEnvFiles: '環境ファイルをworktreeにコピーしますか？',
+      syncFiles: 'コピーするファイルを指定 (カンマ区切り):',
+    },
+  },
+
+  // Create command
+  create: {
+    newMember: '新しい演奏者を招集中...',
+    memberCreated: '✨ 新しい演奏者を招集しました: {{path}}',
+    memberFailed: '演奏者の招集に失敗しました',
+    environmentSetup: '環境をセットアップ中...',
+    environmentComplete: '✨ 環境セットアップが完了しました',
+    environmentFailed: '環境セットアップに失敗しました: {{error}}',
+    openedInEditor: '✨ {{editor}}で開きました',
+    editorFailed: 'エディタの起動に失敗しました: {{error}}',
+    copyingFiles: 'ファイルをコピー中...',
+    filesCopied: '✨ {{count}}個のファイルをコピーしました',
+    gitignoreFiles: 'gitignoreファイル: {{files}}',
+    filesNotFound: '同期対象のファイルが見つかりませんでした',
+    fileNotFound: '{{file}} は見つからないためコピーをスキップしました',
+    fileCopyFailed: '⚠️  ファイル {{file}} のコピーに失敗しました: {{error}}',
+    fileNotFile: '⚠️  {{file}} はファイルではありません',
+    enteringShell: "🎼 演奏者 '{{branch}}' のシェルに入ります...",
+    shellExited: '🎼 シェルを終了しました',
+    commandRunning: '🎵 コマンドを実行中: {{command}}',
+    commandSuccess: '✨ コマンドが正常に実行されました',
+    commandFailed: 'コマンドの実行に失敗しました: {{error}}',
+    sessionPrompt: 'セッションにアタッチしますか？',
+    attachingSession: "🎵 tmuxセッション '{{session}}' にアタッチしています...",
+    sessionAttachLater: '📝 後でアタッチするには以下のコマンドを実行してください:',
+    sessionDetachHint: '💡 ヒント: Ctrl+B, D でセッションからデタッチできます',
+    sessionCreated: "✨ tmuxセッション '{{session}}' を作成しました{{details}}",
+    sessionSplitDetails: '、{{count}}つのペインに{{type}}分割しました{{layout}}',
+    sessionExists: "tmuxセッション '{{session}}' は既に存在します",
+    panesSplit: '✅ tmuxペインを{{count}}つに{{type}}分割しました{{layout}}: {{branch}}',
+    sharedClaudeMode: '✨ CLAUDE.md を共有モードで設定しました',
+    splitClaudeMode: '✨ CLAUDE.md を分割モードで作成しました',
+    claudeFailed: 'CLAUDE.mdの処理に失敗しました: {{error}}',
+  },
+
+  // List command
+  list: {
+    orchestraComposition: '🎼 オーケストラ編成(worktree):',
+    noWorktrees: '演奏者が存在しません',
+    currentMarker: '現在',
+    lockedMarker: 'ロック',
+    prunableMarker: '削除可能',
+    total: '合計: {{count}} 名の演奏者',
+  },
+
+  // Delete command
+  delete: {
+    checkingMembers: '演奏者を確認中...',
+    selectMember: '退場させる演奏者を選択 (Tab で複数選択, Ctrl-C でキャンセル)',
+    confirmDelete: '本当に演奏者を退場させますか？',
+    confirmSingleDelete: "演奏者 '{{branch}}' を削除しますか？",
+    deleting: '演奏者を削除中...',
+    memberExiting: "演奏者 '{{branch}}' が退場中...",
+    deleted: "✨ 演奏者 '{{branch}}' が退場しました",
+    deleteFailed: '演奏者を退場できませんでした: {{error}}',
+    cancelled: 'キャンセルされました',
+    noWorktrees: '演奏者が存在しません',
+    exitTargets: '🪽  退場対象の演奏者:\n',
+    totalMembers: '合計: {{count}} 名の演奏者',
+    exitResults: '🎼 退場結果:\n',
+    success: '成功',
+    failed: '失敗',
+    totalResults: '合計: {{success}} 成功, {{failed}} 失敗',
+    membersExited: '✨ {{count}}名の演奏者が退場しました',
+    remoteBranchDeleting: 'リモートブランチを削除中...',
+    remoteBranchDeleted: "リモートブランチ '{{branch}}' を削除しました",
+    remoteBranchNotFound: "リモートブランチ '{{branch}}' は存在しません",
+    remoteBranchFailed: 'リモートブランチの削除に失敗しました',
+    tmuxSessionDeleted: "tmuxセッション '{{session}}' を削除しました",
+    patternNotFound: '指定されたパターンに一致する演奏者が見つかりません',
+    branchNotFound: '指定された演奏者が見つかりません',
+    similarBranches: '\n類似した演奏者:',
+    warningDelete: '⚠️  以下の選択したworktreeを本当に削除しますか？',
+    locked: 'ロック',
+    prunable: '削除可能',
+    lockedWarning: '⚠️  ロックされています: {{reason}}',
+    currentDirInWorktree: '現在のディレクトリが削除対象のworktree内にあります。\n別のディレクトリから実行してください。\n例: cd .. && mst delete {{branch}}',
+  },
+
+  // Tmux command
+  tmux: {
+    orchestration: 'オーケストレーション！',
+    tmuxNotInstalled: 'tmuxがインストールされていません',
+    fzfNotInstalled: 'fzfがインストールされていません',
+    installMethod: 'インストール方法:',
+    notGitRepo: 'このディレクトリはGitリポジトリではありません',
+    noMembers: '演奏者が存在しません',
+    createMethod: '作成方法:',
+    worktreeNotFound: "ワークツリー '{{name}}' が見つかりません",
+    sessionCreating: "新しいtmuxセッション '{{session}}' を作成します...",
+    sessionCreated: "新しいtmuxセッション '{{session}}' を作成しました",
+    sessionExists: "セッション '{{session}}' は既に存在します",
+    sessionList: '📋 Tmuxセッション一覧:',
+    sessionAttachHint: '💡 ヒント: tmux attach -t <session-name> でセッションにアタッチできます',
+    newWindowOpened: "✨ 新しいウィンドウ '{{branch}}' を開きました",
+    paneSplit: "✨ ペインを{{type}}分割して '{{branch}}' を開きました",
+    memberSelected: "✨ 演奏者 '{{branch}}' を選択しました",
+    moveCommand: 'cd {{path}} で移動してください',
+    launchingEditor: 'エディタを起動: {{command}}',
+    cancelled: 'キャンセルされました',
+    errorOccurred: 'エラーが発生しました',
+    sessionFromExit: 'tmuxセッションから戻りました',
+    selectMember: '演奏者を選択 (Ctrl-C でキャンセル)',
+    noActiveSession: 'アクティブなセッションはありません',
+    attachingToSession: "tmuxセッション '{{session}}' にアタッチしています...",
+    tmuxHelp: `
+📚 tmux クイックリファレンス:
+  
+  ナビゲーション:
+  • Ctrl+B, ↑/↓/←/→  ペイン間を移動
+  • Ctrl+B, o        ペインを順番に切り替え
+  • Ctrl+B, q        ペイン番号を表示（番号を押してジャンプ）
+  • Ctrl+B, z        ペインズーム切り替え（全画面表示）
+  
+  ウィンドウ:
+  • Ctrl+B, c        新しいウィンドウを作成
+  • Ctrl+B, n/p      次/前のウィンドウへ
+  • Ctrl+B, 0-9      番号でウィンドウを切り替え
+  • Ctrl+B, w        ウィンドウ一覧
+  
+  セッション制御:
+  • Ctrl+B, d        セッションからデタッチ（セッションは実行継続）
+  • Ctrl+B, s        セッション一覧/切り替え
+  • exit または Ctrl+D  現在のペイン/ウィンドウを閉じる
+  
+  💡 ヒント: すべてのコマンドはCtrl+Bを押してから離し、次のキーを押します
+`,
+  },
+
+  // Attach command (creates worktree from existing branch) 
+  attach: {
+    orchestration: 'オーケストレーション！',
+    summoning: '既存のブランチからworktreeを作成（ブランチを新しいworktreeにアタッチ）',
+    fetchingLatest: 'リモートから最新情報を取得中...',
+    fetchingBranches: 'ブランチ一覧を取得中...',
+    noAvailableBranches: '利用可能なブランチがありません',
+    allBranchesAttached: 'すべてのブランチは既に演奏者として存在します',
+    selectBranch: 'どのブランチをワークツリーにアタッチしますか？',
+    branchNotFound: "エラー: ブランチ '{{branch}}' が見つかりません",
+    availableBranches: '\n利用可能なブランチ:',
+    summoningMember: '演奏者を招集中...',
+    memberSummoned: "演奏者 '{{branch}}' を招集しました！\n  📁 {{path}}",
+    settingUpEnvironment: '環境をセットアップ中...',
+    setupComplete: '{{manager}} install 完了',
+    setupSkipped: '{{manager}} install をスキップ',
+    openingInEditor: 'エディタで開いています...',
+    openedInCursor: 'Cursorで開きました',
+    openedInVSCode: 'VSCodeで開きました',
+    editorNotFound: 'エディタが見つかりません',
+    executingCommand: '\n🎵 コマンドを実行中: {{command}}',
+    commandFailed: 'コマンドの実行に失敗しました: {{error}}',
+    enteringShell: '\n🎵 シェルに入ります...',
+    exitedShell: '\nシェルから退出しました',
+    summonComplete: '\n✨ 演奏者の招集が完了しました！',
+    moveToDirectory: '\ncd {{path}} で移動できます',
+    memberNotSummoned: '演奏者を招集できませんでした',
+  },
+
+  // Shell command
+  shell: {
+    enteringMemberShell: '演奏者のシェルに入る',
+    branchNameArg: 'ブランチ名（省略時は選択）',
+    selectWithFzf: 'fzfで選択',
+    runCommandAndExit: '指定コマンド実行して終了',
+    attachExistingTmux: '既存tmuxセッションにアタッチ（存在しなければ作成）',
+    tmuxVerticalSplit: 'tmuxの縦分割ペインでシェルを開始',
+    tmuxHorizontalSplit: 'tmuxの横分割ペインでシェルを開始',
+    noMembers: '演奏者が存在しません',
+    createHint: 'maestro create <branch-name> で演奏者を招集してください',
+    errorTmuxOptions: 'エラー: tmuxオプションは一つだけ指定してください',
+    errorTmuxRequired: 'エラー: tmuxオプションを使用するにはtmuxセッション内にいる必要があります',
+    errorFzfNotInstalled: 'エラー: fzfがインストールされていません',
+    selectMemberShell: 'シェルに入る演奏者を選択 (Ctrl-C でキャンセル)',
+    whichMemberEnter: 'どの演奏者に入りますか？',
+    enteringMember: "\n🎼 演奏者 '{{branch}}' に入ります...",
+    executingCommand: '🔧 コマンド実行: {{command}}',
+    commandComplete: '\n✅ コマンド実行完了 (exit code: {{code}})',
+    commandFailed: '❌ コマンド実行失敗: {{error}}',
+    attachingExistingTmux: "📺 既存のtmuxセッション '{{session}}' にアタッチします",
+    creatingNewTmux: "📺 新しいtmuxセッション '{{session}}' を作成します",
+    returnedFromTmux: '\ntmuxセッションから戻りました',
+    tmuxFailed: '❌ tmuxセッション処理に失敗: {{error}}',
+    fallingBackToShell: '通常のシェルで起動します...',
+    startingTmuxPane: "\n🎼 演奏者 '{{branch}}' でtmux {{type}}シェルを開始",
+    tmuxPaneFailed: '❌ tmux {{type}}の起動に失敗: {{error}}',
+    errorTargetUndefined: 'エラー: targetWorktreeが未定義です',
+    shellType: '🐚 シェル: {{shell}}',
+    returnedFromMember: '\n演奏者から戻りました (exit code: {{code}})',
+  },
+
+  // Exec command
+  exec: {
+    executeInMember: '演奏者でコマンドを実行',
+    commandArg: '実行するコマンド',
+    branchArg: 'ブランチ名（省略時は選択）',
+    selectWithFzf: 'fzfで選択',
+    executeInAll: 'すべてのworktreeで実行',
+    noMembers: '演奏者が存在しません',
+    createHint: '作成: maestro create <branch-name>',
+    selectMember: 'コマンドを実行する演奏者を選択 (Ctrl-C でキャンセル)',
+    whichMemberExec: 'どの演奏者で実行しますか？',
+    commandRequired: 'コマンドが必要です',
+    executing: '{{count}}名の演奏者で実行中...',
+    executionResults: '\n🎼 実行結果:\n',
+    exitCode: '終了コード',
+    totalResults: '\n合計: {{success}} 成功, {{failed}} 失敗',
+    output: '出力',
+  },
+
+  // Config command
+  config: {
+    displayingConfig: '設定を表示',
+    projectPath: 'プロジェクト設定パス',
+    globalPath: 'グローバル設定パス',
+    notFound: '見つかりません',
+    currentConfig: '現在の設定:',
+    projectConfig: '📁 プロジェクト設定',
+    globalConfig: '🌍 グローバル設定',
+    noProjectConfig: 'プロジェクト設定が見つかりません',
+    noGlobalConfig: 'グローバル設定が見つかりません',
+    settingConfig: "設定 '{{key}}' = '{{value}}' を設定中",
+    configSet: '✨ 設定を更新しました',
+    removingConfig: "設定 '{{key}}' を削除中",
+    configRemoved: '✨ 設定を削除しました',
+    resettingConfig: '設定をリセット中',
+    configReset: '✨ 設定をリセットしました',
+  },
+
+  // Where command
+  where: {
+    showingPath: '演奏者のパスを表示',
+    branchArg: 'ブランチ名',
+    absolutePath: '絶対パスを表示',
+    cdCommand: 'cdコマンドを出力',
+    copyToClipboard: 'クリップボードにコピー',
+    branchRequired: 'ブランチ名が必要です',
+    memberNotFound: "演奏者 '{{branch}}' が見つかりません",
+    copiedToClipboard: '📋 クリップボードにコピーしました',
+  },
+
+  // Sync command
+  sync: {
+    syncingFiles: 'メインとworktree間でファイルを同期',
+    fileArgs: '同期するファイル',
+    syncToMain: 'worktreeからメインに同期',
+    interactive: 'インタラクティブモード',
+    selectWithFzf: 'fzfでファイルを選択',
+    currentMemberSyncing: '現在の演奏者から同期中...',
+    notInWorktree: 'worktreeディレクトリ内にいません',
+    mainBranchSyncing: 'メインブランチから同期中',
+    cannotSyncToMain: 'メインからメインに同期はできません',
+    noFilesSpecified: 'ファイルが指定されていません',
+    selectFilesToSync: '同期するファイルを選択',
+    filesNotFound: '指定されたファイルが見つかりません',
+    confirmSync: '{{count}}個のファイルを同期しますか？',
+    syncing: '同期中...',
+    syncComplete: '✨ 同期完了: {{count}}個のファイル',
+    syncFailed: '同期に失敗しました',
+  },
+
+  // GitHub command
+  github: {
+    creatingPR: 'GitHub Pull Requestを作成',
+    openingPR: 'Pull Requestページを開く',
+    listingPRs: 'Pull Request一覧',
+    notInWorktree: 'worktree内にいません。worktreeディレクトリから実行してください。',
+    selectTargetBranch: 'ターゲットブランチを選択',
+    prTitle: 'Pull Requestタイトル',
+    prDescription: 'Pull Request説明（オプション）',
+    assignees: 'アサイン先（カンマ区切りのGitHubユーザー名）',
+    createDraft: 'ドラフトとして作成',
+    creatingDraftPR: 'ドラフトPull Requestを作成中...',
+    creatingPRNormal: 'Pull Requestを作成中...',
+    prCreated: '✨ Pull Requestを作成しました',
+    prFailed: 'Pull Requestの作成に失敗しました',
+    prStatus: 'PRステータス',
+    author: '作成者',
+    created: '作成日',
+    draft: 'ドラフト',
+    changedFiles: 'ファイル変更',
+    additions: '追加',
+    deletions: '削除',
+    noPRsFound: 'Pull Requestが見つかりません',
+    openingInBrowser: 'ブラウザで開いています...',
+    fetchingMetadata: 'GitHubメタデータを取得中...',
+  },
+
+  // Completion command
+  completion: {
+    generatingCompletion: 'シェル補完を生成',
+    shellArg: 'シェルタイプ',
+    saveToFile: 'ファイルに保存',
+    outputFile: '出力ファイルパス',
+  },
+
+  // Push command
+  push: {
+    pushingBranch: '現在のブランチをリモートにプッシュ',
+    setUpstream: 'アップストリームブランチを設定',
+    forcePush: '強制プッシュ',
+    forcePushLease: 'リースによる強制プッシュ',
+    notInWorktree: 'worktree内にいません。worktreeディレクトリから実行してください。',
+    checkingBranch: '現在のブランチを確認中...',
+    cannotPushMain: 'メインブランチからはプッシュできません。worktreeを使用してください。',
+    pushingToRemote: 'リモートにプッシュ中...',
+    pushComplete: '✨ プッシュ完了',
+    upstreamSet: 'アップストリームブランチを設定: {{branch}}',
+    pushFailed: 'プッシュに失敗しました',
+  },
+
+  // Review command
+  review: {
+    aiCodeReview: 'AI搭載コードレビュー',
+    baseBranchArg: '比較用ベースブランチ',
+    modelArg: '使用するAIモデル',
+    detailedReview: '詳細レビュー',
+    checkingDiff: '差分を確認中...',
+    noDifferences: '{{branch}}との差分はありません',
+    requestingReview: 'AIレビューをリクエスト中...',
+    changeSummary: '📊 変更サマリー',
+    files: 'ファイル',
+    additions: '追加',
+    deletions: '削除',
+    reviewResult: '🤖 AIレビュー結果',
+    reviewFailed: 'レビューに失敗しました',
+  },
+
+  // Issue command
+  issue: {
+    createFromIssue: 'GitHub IssueからWorktreeを作成',
+    issueNumberArg: 'Issue番号',
+    branchPrefixOpt: 'ブランチ名プレフィックス',
+    openEditor: '作成後にエディタで開く',
+    attachTmux: 'tmuxセッションを作成してアタッチ',
+    fetchingIssue: 'Issue情報を取得中...',
+    issueNotFound: 'Issueが見つかりません',
+    creating: 'Issue #{{number}}からworktreeを作成中...',
+    createdFromIssue: '✨ IssueからWorktreeを作成しました',
+    title: 'タイトル',
+    author: '作成者',
+    branch: 'ブランチ',
+    worktree: 'Worktree',
+  },
+
+  // History command
+  history: {
+    showHistory: 'コマンド履歴を表示',
+    limitArg: '表示する項目数',
+    showStats: '統計を表示',
+    clearHistory: '履歴をクリア',
+    noHistory: '履歴がありません',
+    commandHistory: '📜 コマンド履歴',
+    historyCleared: '✨ 履歴をクリアしました',
+    statistics: '📊 統計',
+    totalCommands: '総コマンド数',
+    uniqueCommands: 'ユニークコマンド数',
+    mostUsed: '最も使用',
+  },
+
+  // Graph command
+  graph: {
+    showGraph: 'worktree依存関係グラフを表示',
+    outputFormat: '出力形式',
+    showOrphans: '孤立したworktreeを表示',
+    orchestraStructure: '🎼 オーケストラ構造',
+    noWorktrees: 'worktreeが見つかりません',
+  },
+
+  // Health command
+  health: {
+    checkHealth: 'Maestroインストールの健全性をチェック',
+    checkingHealth: '🏥 Maestroの健全性をチェック中...',
+    statusOK: 'OK',
+    statusWarning: '警告',
+    statusError: 'エラー',
+    gitInstalled: 'Gitインストール済み',
+    gitVersion: 'Gitバージョン',
+    inGitRepo: 'Gitリポジトリ内',
+    tmuxInstalled: 'tmuxインストール済み',
+    tmuxVersion: 'tmuxバージョン',
+    tmuxNotInstalled: 'tmuxがインストールされていません（オプション）',
+    fzfInstalled: 'fzfインストール済み',
+    fzfNotInstalled: 'fzfがインストールされていません（オプション）',
+    configFound: '設定ファイル発見',
+    worktreeCount: 'worktree数',
+    healthStatus: '健全性ステータス',
+    allGood: 'すべてのシステムが稼働中',
+    hasWarnings: '警告はありますが機能しています',
+    hasErrors: '注意が必要なエラーがあります',
+  },
+
+  // Snapshot command
+  snapshot: {
+    createSnapshot: 'worktree状態のスナップショットを作成',
+    snapshotName: 'スナップショット名',
+    includeUntracked: '未追跡ファイルを含める',
+    creating: 'スナップショットを作成中...',
+    created: '✨ スナップショットを作成しました: {{name}}',
+    failed: 'スナップショットの作成に失敗しました',
+  },
+
+  // CLI main
+  cli: {
+    description: '🎼 Maestro - Git worktreeオーケストレーションでClaude Codeとパラレル開発',
+    error: 'エラー',
+  },
+
+  // Error messages
+  errors: {
+    notGitRepo: 'このディレクトリはGitリポジトリではありません',
+    general: '不明なエラー',
+  },
+}

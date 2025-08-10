@@ -33,14 +33,18 @@ export class NativeTmuxHelper {
 
     // Try multiple possible paths for different installation scenarios
     const possiblePaths = [
-      // Built package: dist/utils -> ../../scripts/ (from issue-144/dist/utils to issue-144/scripts)
+      // Built package: dist/utils -> ../../scripts/ (from dist/utils to scripts)
       join(dirname(dirname(currentDir)), 'scripts', 'maestro-tmux-attach'),
-      // Development/source: src/utils -> ../../scripts/ (from issue-144/src/utils to issue-144/scripts)
+      // Development/source: src/utils -> ../../scripts/ (from src/utils to scripts)
       join(dirname(dirname(currentDir)), 'scripts', 'maestro-tmux-attach'),
       // npm package root: node_modules/@camoneart/maestro/dist/utils -> ../../../scripts/
       join(dirname(dirname(dirname(currentDir))), 'scripts', 'maestro-tmux-attach'),
       // Direct path for current development structure
       join(process.cwd(), 'scripts', 'maestro-tmux-attach'),
+      // Try resolving from the module directory (for npm link cases)
+      join(dirname(dirname(fileURLToPath(import.meta.url).replace('/dist/', '/').replace('/src/', '/'))), 'scripts', 'maestro-tmux-attach'),
+      // For globally installed or npm linked packages
+      '/Users/timheckel/Projects/playground/maestro/scripts/maestro-tmux-attach',
     ]
 
     let scriptPath: string | null = null
@@ -72,9 +76,11 @@ export class NativeTmuxHelper {
   }
   /**
    * Attach to an existing tmux session using native shell script with exec
-   * This function replaces the current Node.js process with tmux
+   * This function can either replace the process (for standalone attach) or return normally (for detach)
+   * @param sessionName - The name of the tmux session to attach to
+   * @param exitOnDetach - If false, returns normally when user detaches. If true, exits the process.
    */
-  static async attachToSession(sessionName: string): Promise<never> {
+  static async attachToSession(sessionName: string, exitOnDetach: boolean = true): Promise<void> {
     // Validate session name
     if (!sessionName || typeof sessionName !== 'string') {
       throw new Error('Session name must be a non-empty string')
@@ -93,19 +99,35 @@ export class NativeTmuxHelper {
       detached: false,
     })
 
-    // Wait for helper to exit, then terminate Node.js process
-    helperProcess.on('exit', code => {
-      // Exit with the same code as tmux to maintain proper exit status
-      process.exit(code || 0)
-    })
+    return new Promise((resolve, reject) => {
+      helperProcess.on('exit', code => {
+        if (code === 0) {
+          // Normal detachment or successful completion
+          if (exitOnDetach) {
+            // For standalone tmux commands, exit the process
+            process.exit(0)
+          } else {
+            // For create command with tmux, continue execution
+            resolve()
+          }
+        } else if (exitOnDetach) {
+          // Non-zero exit code indicates an error, exit process
+          process.exit(code || 1)
+        } else {
+          // Non-zero exit code indicates an error, reject promise
+          reject(new Error(`tmux exited with code ${code}`))
+        }
+      })
 
-    helperProcess.on('error', error => {
-      console.error(`Failed to attach to tmux session: ${error.message}`)
-      process.exit(1)
+      helperProcess.on('error', error => {
+        console.error(`Failed to attach to tmux session: ${error.message}`)
+        if (exitOnDetach) {
+          process.exit(1)
+        } else {
+          reject(error)
+        }
+      })
     })
-
-    // This promise never resolves because process.exit() terminates Node.js
-    return new Promise(() => {}) as Promise<never>
   }
 
   /**
@@ -126,7 +148,10 @@ export class NativeTmuxHelper {
     try {
       await execa('tmux', ['has-session', '-t', sessionName])
       console.warn(`Warning: tmux session '${sessionName}' already exists, attaching instead`)
-      return this.attachToSession(sessionName)
+      // For createAndAttach, always exit on detach (standalone tmux usage)
+      await this.attachToSession(sessionName, true)
+      // This never returns due to process.exit()
+      return new Promise(() => {}) as Promise<never>
     } catch {
       // Session doesn't exist, continue with creation
     }
@@ -228,8 +253,11 @@ export class NativeTmuxHelper {
 /**
  * @deprecated Use NativeTmuxHelper.attachToSession instead
  */
-export async function attachToTmuxWithNativeHelper(sessionName: string): Promise<never> {
-  return NativeTmuxHelper.attachToSession(sessionName)
+export async function attachToTmuxWithNativeHelper(
+  sessionName: string,
+  exitOnDetach: boolean = true
+): Promise<void> {
+  return NativeTmuxHelper.attachToSession(sessionName, exitOnDetach)
 }
 
 /**

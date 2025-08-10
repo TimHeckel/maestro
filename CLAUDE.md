@@ -47,6 +47,7 @@ Maestro is a CLI tool for managing Git worktrees with a conductor/orchestra them
 - **Core Logic**: `src/core/` - Core Git and configuration management
 - **Types**: `src/types/index.ts` - TypeScript type definitions
 - **Utils**: `src/utils/` - Utility functions and helpers
+- **i18n**: `src/i18n/` - Internationalization support (English/Japanese)
 
 ### Key Classes
 
@@ -99,6 +100,28 @@ This project follows TDD methodology:
 - `pnpm test -- path/to/test.test.ts` - Run specific test file
 - `pnpm test:coverage` - Generate coverage report
 - `pnpm test:e2e` - Run end-to-end tests
+
+## Recent Improvements (v5.1.1)
+
+### Internationalization (i18n) System
+- **Complete i18n support**: All UI text now supports multiple languages (English/Japanese)
+- **Language detection priority**: Project config → Global config → System locale → Default (Japanese)
+- **User language selection**: During `mst init`, users can choose their preferred language
+- **Comprehensive translations**: All commands, error messages, and UI strings are translated
+
+### Tmux Integration Enhancements
+- **Fixed detachment behavior**: `mst create --tmux` no longer exits when detaching (Ctrl+B, D)
+- **New `tmux-attach` command**: Easy reattachment to existing tmux sessions
+  - `mst tmux-attach` or `mst ta` - Interactive session selection
+  - `mst ta -l` - List all tmux sessions
+  - `mst ta --help-tmux` - Show tmux navigation help
+- **Tmux navigation help**: Automatic help display when attaching or creating multi-pane sessions
+- **Improved script path resolution**: Fixed for npm linked packages
+
+### Command Clarity
+- **`attach` vs `tmux-attach`**: Clear distinction between commands
+  - `attach`: Creates worktree from existing branch
+  - `tmux-attach`: Reconnects to running tmux session
 
 ## Implementation Logs
 
@@ -259,12 +282,13 @@ This ensures documentation always stays in sync with implementation changes with
    - [ ] Ctrl+C interrupts commands without detaching
    - [ ] Ctrl+B, D detaches properly
    - [ ] Terminal remains functional after detach
+   - [ ] mst process continues running after tmux detach (doesn't exit immediately)
    - [ ] `--tmux-h` creates horizontal split
    - [ ] `--tmux-v` creates vertical split
    - [ ] Pane validation works: `--tmux-h-panes 20` fails with clear error
    - [ ] Pane validation allows reasonable counts: `--tmux-h-panes 6` succeeds
    - [ ] Early validation prevents resource creation when limits exceeded
-   - [ ] Error messages are in Japanese and provide clear guidance
+   - [ ] Error messages respect language selection (English/Japanese)
    ```
 
 4. **Pre-Release Testing**
@@ -385,3 +409,54 @@ Feature: <feature name here>
 - Side Effects: <any concerns or side effects>
 - Related Files: <file locations>
 ```
+
+## Recent Improvements (v5.0.0+)
+
+### tmux Detachment Fix
+**Problem**: When users detached from tmux sessions (Ctrl+B, D), the entire mst process would exit immediately, preventing completion of post-attachment tasks.
+
+**Solution**: Modified `NativeTmuxHelper.attachToSession()` to accept an `exitOnDetach` parameter. When called from `mst create` with tmux options, it passes `exitOnDetach: false`, allowing mst to continue running after detachment.
+
+**Files Modified**:
+- `src/utils/nativeTmux.ts` - Added exitOnDetach parameter to attachToSession()
+- `src/utils/tty.ts` - Updated to pass exitOnDetach parameter
+- `src/utils/tmuxSession.ts` - Pass exitOnDetach: false for create command attachments
+
+### Internationalization (i18n) Support
+**Feature**: Full English and Japanese language support throughout the CLI.
+
+**Implementation**:
+- Created `src/i18n/` directory with translation files (`en.ts`, `ja.ts`)
+- Added language selection prompt to `mst init` command
+- Language preference saved to `.maestro.json` and global config
+- Auto-detection from system locale (`$LANG` environment variable)
+- All command descriptions now bilingual
+
+**Language Priority**:
+1. Project `.maestro.json` setting
+2. Global `~/.maestro/config.json` setting
+3. System locale detection
+4. Default: Japanese (backward compatibility)
+
+**Files Added/Modified**:
+- `src/i18n/index.ts` - i18n manager with language detection
+- `src/i18n/en.ts` - English translations
+- `src/i18n/ja.ts` - Japanese translations
+- `src/commands/init.ts` - Added language selection prompt
+
+### tmux Multi-Pane Clarification
+**Clarification**: When using `--tmux-h-panes` or `--tmux-v-panes`, Maestro creates:
+- **ONE tmux session** (not multiple sessions)
+- **Multiple panes** within that single session
+- **All panes** operate in the **SAME worktree directory**
+
+This is ideal for parallel development workflows where you need multiple terminal views of the same feature branch (editor, tests, dev server, git operations).
+
+# important-instruction-reminders
+Do what has been asked; nothing more, nothing less.
+NEVER create files unless they're absolutely necessary for achieving your goal.
+ALWAYS prefer editing an existing file to creating a new one.
+NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.
+
+      
+      IMPORTANT: this context may or may not be relevant to your tasks. You should not respond to this context unless it is highly relevant to your task.

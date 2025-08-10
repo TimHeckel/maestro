@@ -7,6 +7,7 @@ import fs from 'fs'
 import path from 'path'
 import { ConfigManager, Config } from '../core/config.js'
 import { formatPath as formatDisplayPath } from '../utils/path.js'
+import { t } from '../i18n/index.js'
 
 // 拡張Worktree型定義
 interface EnhancedWorktree extends Worktree {
@@ -212,7 +213,7 @@ export const listCommand = new Command('list')
           return
         }
 
-        console.log(chalk.bold('\n🎼 オーケストラ編成(worktree):\n'))
+        console.log(chalk.bold('\n' + t('list.orchestraComposition') + '\n'))
 
         // メインワークツリーを先頭に表示
         const mainWorktree = worktrees.find(
@@ -244,9 +245,9 @@ export const listCommand = new Command('list')
           )
         }
 
-        console.log(chalk.gray(`\n合計: ${worktrees.length} 名の演奏者`))
+        console.log(chalk.gray(`\n${t('list.total', { count: worktrees.length })}`))
       } catch (error) {
-        console.error(chalk.red('エラー:'), error instanceof Error ? error.message : '不明なエラー')
+        console.error(chalk.red(t('common.error') + ':'), error instanceof Error ? error.message : t('errors.general'))
         process.exit(1)
       }
     }

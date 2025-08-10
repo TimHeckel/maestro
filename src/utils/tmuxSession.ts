@@ -136,8 +136,11 @@ async function setTitleForAllPanes(
 }
 
 // tmuxセッションをアタッチする関数（TTY問題を解決）
-export function attachToTmuxSession(sessionName: string): Promise<void> {
-  return attachToTmuxWithProperTTY(sessionName)
+export function attachToTmuxSession(
+  sessionName: string,
+  exitOnDetach: boolean = true
+): Promise<void> {
+  return attachToTmuxWithProperTTY(sessionName, exitOnDetach)
 }
 
 // tmuxクライアントをスイッチする関数（TTY問題を解決）
@@ -216,7 +219,7 @@ export async function createTmuxSession(options: TmuxSessionOptions): Promise<vo
         try {
           await execa('tmux', ['has-session', '-t', sessionName])
           console.log(chalk.yellow(`tmuxセッション '${sessionName}' は既に存在します`))
-          await attachToTmuxSession(sessionName)
+          await attachToTmuxSession(sessionName, false) // Don't exit on detach for create command
           return
         } catch {
           // セッションが存在しない場合は作成
@@ -245,7 +248,7 @@ export async function createTmuxSession(options: TmuxSessionOptions): Promise<vo
 
             if (shouldAttach) {
               console.log(chalk.cyan(`🎵 tmuxセッション '${sessionName}' にアタッチしています...`))
-              await attachToTmuxSession(sessionName)
+              await attachToTmuxSession(sessionName, false) // Don't exit on detach for create command
             } else {
               console.log(
                 chalk.yellow(`\n📝 後でアタッチするには以下のコマンドを実行してください:`)
@@ -276,6 +279,16 @@ export async function createTmuxSession(options: TmuxSessionOptions): Promise<vo
             `✅ tmuxペインを${paneCountMsg}${splitTypeMsg}分割しました${layoutMsg}: ${branchName}`
           )
         )
+        // Show help for navigating panes when multiple panes are created
+        if ((options.tmuxHPanes && options.tmuxHPanes > 1) || (options.tmuxVPanes && options.tmuxVPanes > 1)) {
+          console.log(chalk.gray(`
+💡 Quick tmux navigation:
+  • Ctrl+B, ↑/↓/←/→  Navigate between panes
+  • Ctrl+B, o        Cycle through panes  
+  • Ctrl+B, z        Toggle pane zoom
+  • Ctrl+B, d        Detach from session
+  `))
+        }
         return
       }
     }
@@ -314,7 +327,7 @@ export async function createTmuxSession(options: TmuxSessionOptions): Promise<vo
           if (isInsideTmux) {
             await switchTmuxClient(sessionName)
           } else {
-            await attachToTmuxSession(sessionName)
+            await attachToTmuxSession(sessionName, false) // Don't exit on detach for create command
           }
         } else {
           console.log(chalk.yellow(`\n📝 後でアタッチするには以下のコマンドを実行してください:`))
