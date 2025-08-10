@@ -1,5 +1,61 @@
 # Changelog
 
+## 5.2.0
+
+### Minor Changes
+
+- Enhanced tmux integration with navigation help and improved session management
+
+  ## New Features
+
+  ### Automatic tmux Navigation Help
+  - Shows helpful tmux navigation tips when attaching to sessions or creating multi-pane layouts
+  - Built-in cheat sheet accessible via `mst tmux-attach --help-tmux`
+  - Quick reference displayed inline for better user experience
+
+  ### Improved tmux-attach Command
+  - New `mst tmux-attach` (alias: `ta`) for easy session reconnection
+  - Interactive session selection with worktree context
+  - Lists all sessions with status indicators (attached, worktree association)
+  - Option to show just the help without attaching
+
+  ### Better Language Support
+  - Complete i18n system implementation for English/Japanese
+  - Language auto-detection: project config → global config → system locale
+  - User can select language during `mst init`
+  - All commands, errors, and UI strings fully translated
+
+  ### Bug Fixes
+  - Fixed tmux detachment issue where process would exit immediately
+  - Improved script path resolution for npm linked packages
+  - Clarified distinction between `attach` (create worktree) and `tmux-attach` (reconnect to session)
+
+  ### Documentation
+  - Added comprehensive tmux navigation reference
+  - Updated README with new tmux features
+  - Enhanced CLAUDE.md with recent improvements
+
+## 5.1.1
+
+### Patch Changes
+
+- Fixed i18n system and clarified attach vs tmux-attach commands
+  - Moved all hardcoded Japanese text to i18n language files
+  - Fixed confusion between `attach` (create worktree) and `tmux-attach` (reconnect to session) commands
+  - Updated command descriptions to be clearer
+  - Fixed tmux detachment issue where process would exit immediately
+  - Added comprehensive English translations throughout the CLI
+
+## 5.1.0
+
+### Minor Changes
+
+- Fix tmux detachment behavior and add internationalization support
+  - Fixed: tmux detachment (Ctrl+B, D) no longer exits mst process prematurely
+  - Added: Full English/Japanese language support with selection in mst init
+  - Added: Language auto-detection from system locale
+  - Improved: README documentation for tmux multi-pane sessions
+
 ## 4.0.0
 
 ### Major Changes
