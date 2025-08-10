@@ -1,5 +1,22 @@
 # Changelog
 
+## 5.2.1
+
+### Patch Changes
+
+- Fixed all remaining hardcoded Japanese strings in create command
+
+  ## Bug Fixes
+  - Removed all hardcoded Japanese text from create.ts
+  - All messages now properly use i18n translation system
+  - Language detection correctly respects system locale (en_US.UTF-8)
+  - Default language now follows system locale instead of defaulting to Japanese
+
+  ## Improvements
+  - Complete i18n implementation across all commands
+  - Proper English translations for all UI text
+  - Consistent language experience throughout the CLI
+
 ## 5.2.0
 
 ### Minor Changes

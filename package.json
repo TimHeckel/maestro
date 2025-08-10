@@ -1,6 +1,6 @@
 {
   "name": "@camoneart/maestro",
-  "version": "5.2.0",
+  "version": "5.2.1",
   "description": "A CLI tool that conducts Git worktrees like an orchestra and accelerates parallel development with Claude Code",
   "type": "module",
   "bin": {
