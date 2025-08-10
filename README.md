@@ -208,11 +208,12 @@ See the full [Command Reference](./docs/COMMANDS.md).
 | Command     | Description                  | Example                        |
 | ----------- | ---------------------------- | ------------------------------ |
 | `init`      | Initialize project config    | `mst init --yes`               |
-| `create`    | Create a new worktree        | `mst create feature/login`     |
-| `list`      | List worktrees               | `mst list`                     |
-| `delete`    | Orchestra members exit the stage with automatic tmux session cleanup | `mst delete feature/old --keep-session` |
-| `tmux`      | Open in tmux                 | `mst tmux`                     |
-| `tmux-attach` | Reconnect to tmux session (alias: `ta`) | `mst ta` or `mst ta --help-tmux` |
+| `create`    | Create NEW worktree & branch | `mst create feature/login`     |
+| `attach`    | Create worktree from EXISTING branch | `mst attach feature/existing` |
+| `list`      | List all worktrees           | `mst list`                     |
+| `delete`    | Delete worktree & cleanup    | `mst delete feature/old`       |
+| `tmux`      | Switch between worktrees in tmux | `mst tmux`                |
+| `tmux-attach` | Reconnect to running tmux session (alias: `ta`) | `mst ta` or `mst ta --help-tmux` |
 | `sync`      | Real-time file sync          | `mst sync --auto`              |
 | `push`      | Push and create PR           | `mst push --pr`                |
 | `github`    | GitHub integration           | `mst github checkout 123`      |
@@ -220,6 +221,33 @@ See the full [Command Reference](./docs/COMMANDS.md).
 | `where`     | Show current performer       | `mst where`                    |
 
 All sub-commands and options are documented in the [Command Reference](./docs/COMMANDS.md).
+
+#### Understanding `attach` vs `tmux-attach` (ta)
+
+These commands serve completely different purposes:
+
+| Command | Purpose | What it does | Example |
+|---------|---------|--------------|---------|
+| **`attach`** | **Create worktree from existing branch** | Takes an existing remote/local branch and creates a new worktree for it | `mst attach feature/existing-branch` |
+| **`tmux-attach` (ta)** | **Reconnect to tmux session** | Reconnects to an already running tmux session that was previously created | `mst ta` or `mst ta feature/my-branch` |
+
+**Quick Examples:**
+```bash
+# ATTACH: Create a new worktree from an existing branch
+mst attach feature/existing-branch    # Creates worktree from existing branch
+mst attach                            # Interactive selection of existing branches
+
+# TMUX-ATTACH: Reconnect to a running tmux session
+mst ta                                # Interactive selection of running sessions
+mst ta feature/my-branch              # Reconnect to specific session
+mst ta --list                         # List all running tmux sessions
+mst ta --help-tmux                    # Show tmux navigation help
+```
+
+**Common Workflow:**
+1. `mst create feature/new --tmux` - Creates worktree AND tmux session
+2. Work in tmux, then detach with `Ctrl+B, D`
+3. Later: `mst ta feature/new` - Reconnect to the same session
 
 #### One-line Cheat Sheet
 
