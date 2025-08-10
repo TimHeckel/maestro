@@ -101,6 +101,33 @@ This project follows TDD methodology:
 - `pnpm test:coverage` - Generate coverage report
 - `pnpm test:e2e` - Run end-to-end tests
 
+## Orchestration System (v5.3.0)
+
+Maestro now includes a powerful orchestration system for planning and executing parallel development workflows:
+
+### Commands
+- `mst plan` - Interactive planning session to create MAESTRO.yml
+- `mst implement` - Execute the orchestration plan
+- `mst orchestra` - Manage and monitor orchestration
+
+### MAESTRO.yml
+The orchestration configuration file that defines:
+- Features to implement
+- tmux sessions and pane layouts
+- Initial prompts for each pane (pre-filled but not auto-executed)
+- Claude context and agent assignments
+- Dependencies between features
+
+### Technical Implementation
+- Uses `tmux send-keys` to inject prompts without executing
+- Creates worktrees in parallel or respecting dependencies
+- Customizes CLAUDE.md for each worktree with orchestration context
+- Tracks orchestration state in `.maestro/orchestra.state.json`
+
+### Requirements
+- tmux is required for orchestration features
+- All orchestration commands check for tmux availability
+
 ## Recent Improvements (v5.2.1)
 
 ### Complete i18n Implementation

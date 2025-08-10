@@ -45,6 +45,7 @@ Maestro is a CLI that makes Git worktree management intuitive. When working on m
 | Feature                   | Description                                         |
 | ------------------------- | --------------------------------------------------- |
 | 🎼 **Orchestra UI**       | Operate worktrees as performers in an intuitive way |
+| 🎭 **Orchestration Mode** | Plan & execute parallel development workflows (NEW) |
 | 🤖 **Claude AI**          | AI diff reviews & code suggestions                  |
 | 🔗 **GitHub integration** | Reliable worktree creation from Issues / PRs with rich metadata |
 | 🎯 **tmux / fzf**         | Keyboard-only, lightning-fast switching             |
@@ -219,6 +220,9 @@ See the full [Command Reference](./docs/COMMANDS.md).
 | `github`    | GitHub integration           | `mst github checkout 123`      |
 | `health`    | Health check                 | `mst health --fix`             |
 | `where`     | Show current performer       | `mst where`                    |
+| `plan`      | Plan orchestration workflow  | `mst plan`                     |
+| `implement` | Execute orchestration plan   | `mst implement`                |
+| `orchestra` | Manage orchestration         | `mst orchestra status`         |
 
 All sub-commands and options are documented in the [Command Reference](./docs/COMMANDS.md).
 
@@ -261,6 +265,73 @@ mst tmux                                       # switch via fzf
 mst push --pr                                  # push with PR
 mst review --auto-flow                         # auto review & merge
 ```
+
+## Orchestration Mode (NEW!) 🎭
+
+Maestro can now act as a true "conductor" - planning and executing entire parallel development workflows with pre-configured prompts for each worktree.
+
+### How It Works
+
+1. **Plan**: `mst plan` - Interactive session to design your orchestration
+2. **Implement**: `mst implement` - Execute the plan, creating all worktrees and sessions
+3. **Orchestra**: `mst orchestra` - Monitor and manage your orchestration
+
+### Example Workflow
+
+```bash
+# 1. Plan your orchestration
+mst plan
+
+# Interactive prompts guide you through:
+# - Defining features to implement
+# - Configuring tmux sessions and panes
+# - Setting initial prompts for each pane
+# - Assigning Claude agents
+# - Managing dependencies between features
+
+# 2. Execute the orchestration
+mst implement
+
+# This will:
+# ✓ Create all worktrees in parallel
+# ✓ Spawn tmux sessions with configured layouts
+# ✓ Pre-fill prompts in each pane (not auto-executed)
+# ✓ Customize CLAUDE.md for each worktree
+# ✓ Configure assigned agents
+
+# 3. Manage your orchestra
+mst orchestra          # List all sessions
+mst orchestra status   # Detailed status
+mst orchestra attach   # Interactive session selector
+```
+
+### MAESTRO.yml Structure
+
+The orchestration plan is stored in `MAESTRO.yml`:
+
+```yaml
+version: "1.0"
+orchestra:
+  - feature: user-auth
+    description: OAuth2 authentication system
+    sessions:
+      - name: backend
+        panes: 3
+        layout: main-vertical
+        prompts:
+          - "# Implement OAuth2 endpoints"
+          - "npm test --watch"
+          - "npm run dev"
+    claude_context: |
+      Use Passport.js for OAuth2
+      Implement JWT with refresh tokens
+    agents: [code-reviewer, security-scanner]
+```
+
+### Requirements
+
+- **tmux required**: Orchestration features require tmux for session management
+- Install with: `brew install tmux`
 
 ## Advanced Features
 

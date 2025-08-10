@@ -11,6 +11,9 @@ importers:
       '@modelcontextprotocol/sdk':
         specifier: 1.17.0
         version: 1.17.0
+      '@types/js-yaml':
+        specifier: 4.0.9
+        version: 4.0.9
       chalk:
         specifier: 5.4.1
         version: 5.4.1
@@ -32,6 +35,9 @@ importers:
       inquirer:
         specifier: 12.8.2
         version: 12.8.2(@types/node@24.1.0)
+      js-yaml:
+        specifier: 4.1.0
+        version: 4.1.0
       node-pty:
         specifier: 1.0.0
         version: 1.0.0
@@ -701,6 +707,9 @@ packages:
 
   '@types/inquirer@9.0.8':
     resolution: {integrity: sha512-CgPD5kFGWsb8HJ5K7rfWlifao87m4ph8uioU7OTncJevmE/VLIqAAjfQtko578JZg7/f69K4FgqYym3gNr7DeA==}
+
+  '@types/js-yaml@4.0.9':
+    resolution: {integrity: sha512-k4MGaQl5TGo/iipqb2UDG2UwjXziSWkh0uysQelTlJpX1qGlpUZYm8PnO4DxG1qBomtJUdYJ6qR6xdIah10JLg==}
 
   '@types/json-schema@7.0.15':
     resolution: {integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==}
@@ -2996,6 +3005,8 @@ snapshots:
     dependencies:
       '@types/through': 0.0.33
       rxjs: 7.8.2
+
+  '@types/js-yaml@4.0.9': {}
 
   '@types/json-schema@7.0.15': {}
 

@@ -1,5 +1,44 @@
 # Changelog
 
+## 5.3.0
+
+### Minor Changes
+
+- Add powerful orchestration system for parallel development workflows
+
+  ## New Features
+
+  ### Orchestration Commands
+  - **`mst plan`** - Interactive planning session to design multi-feature workflows
+  - **`mst implement`** - Execute orchestration plans, creating all worktrees and sessions
+  - **`mst orchestra`** - Monitor and manage orchestration status
+
+  ### MAESTRO.yml Configuration
+  - Define multiple features with dependencies
+  - Configure tmux sessions with custom layouts
+  - Pre-populate prompts in each pane (not auto-executed)
+  - Add Claude-specific context per feature
+  - Assign agents to features
+
+  ### Technical Implementation
+  - Uses `tmux send-keys` to inject prompts without executing
+  - Parallel worktree creation with dependency resolution
+  - Customized CLAUDE.md for each worktree with orchestration context
+  - State tracking in `.maestro/orchestra.state.json`
+  - Full i18n support for all orchestration commands
+
+  ### Example Workflow
+
+  ```bash
+  mst plan          # Design your orchestration
+  mst implement     # Execute the plan
+  mst orchestra     # Monitor progress
+  ```
+
+  ### Requirements
+  - tmux is required for all orchestration features
+  - Commands validate tmux availability before execution
+
 ## 5.2.1
 
 ### Patch Changes

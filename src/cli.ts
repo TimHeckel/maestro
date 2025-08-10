@@ -29,6 +29,9 @@ import { healthCommand } from './commands/health.js'
 import { snapshotCommand } from './commands/snapshot.js'
 import { initCommand } from './commands/init.js'
 import { pushCommand } from './commands/push.js'
+import { planCommand } from './commands/plan.js'
+import { implementCommand } from './commands/implement.js'
+import { orchestraCommand } from './commands/orchestra.js'
 
 const program = new Command()
 
@@ -59,6 +62,9 @@ program.addCommand(graphCommand)
 program.addCommand(healthCommand)
 program.addCommand(snapshotCommand)
 program.addCommand(pushCommand)
+program.addCommand(planCommand)
+program.addCommand(implementCommand)
+program.addCommand(orchestraCommand)
 
 // Error handling
 program.exitOverride()
