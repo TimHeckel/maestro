@@ -101,17 +101,26 @@ This project follows TDD methodology:
 - `pnpm test:coverage` - Generate coverage report
 - `pnpm test:e2e` - Run end-to-end tests
 
-## Recent Improvements (v5.1.1)
+## Recent Improvements (v5.2.1)
 
-### Internationalization (i18n) System
+### Complete i18n Implementation
+- **Fixed all hardcoded Japanese strings**: Removed remaining Japanese text from create.ts and other commands
 - **Complete i18n support**: All UI text now supports multiple languages (English/Japanese)
-- **Language detection priority**: Project config → Global config → System locale → Default (Japanese)
+- **Language detection priority**: Project config → Global config → System locale → Default (English)
 - **User language selection**: During `mst init`, users can choose their preferred language
 - **Comprehensive translations**: All commands, error messages, and UI strings are translated
+- **Proper locale detection**: System locale (e.g., en_US.UTF-8) correctly detected and respected
 
 ### Tmux Integration Enhancements
+- **Navigation help**: Automatic display of tmux navigation tips in user's language
 - **Fixed detachment behavior**: `mst create --tmux` no longer exits when detaching (Ctrl+B, D)
-- **New `tmux-attach` command**: Easy reattachment to existing tmux sessions
+- **New `tmux-attach` command**: Easy reattachment to existing tmux sessions with `mst ta`
+- **Built-in cheat sheet**: Access tmux help anytime with `mst ta --help-tmux`
+
+### Command Behavior Clarifications
+- **Create command**: Default behavior creates worktree and exits (use `--shell` or `--tmux` to enter)
+- **Shell entry**: Explicit `--shell` flag required to enter shell after creation
+- **Tmux session**: Use `--tmux` to create and optionally attach to tmux session
   - `mst tmux-attach` or `mst ta` - Interactive session selection
   - `mst ta -l` - List all tmux sessions
   - `mst ta --help-tmux` - Show tmux navigation help

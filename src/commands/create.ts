@@ -16,6 +16,7 @@ import {
 import { detectPackageManager } from '../utils/packageManager.js'
 import { addToGitignore } from '../utils/gitignore.js'
 import { formatPath } from '../utils/path.js'
+import { t } from '../i18n/index.js'
 
 // GitHubラベル型定義
 interface GithubLabel {
@@ -196,7 +197,7 @@ export async function handleClaudeMarkdown(worktreePath: string, config: Config)
 
         // シンボリックリンクを作成
         await fs.symlink(path.relative(worktreePath, rootClaudePath), worktreeClaudePath)
-        console.log(chalk.green(`✨ CLAUDE.md を共有モードで設定しました`))
+        console.log(chalk.green(t('create.sharedClaudeMode')))
       }
     } else if (claudeMode === 'split') {
       // 分割モード: 専用のCLAUDE.mdを作成
@@ -212,10 +213,10 @@ This is a dedicated CLAUDE.md for this worktree.
 Add specific instructions for this worktree here.
 `
       await fs.writeFile(worktreeClaudePath, splitContent)
-      console.log(chalk.green(`✨ CLAUDE.md を分割モードで作成しました`))
+      console.log(chalk.green(t('create.splitClaudeMode')))
     }
   } catch (error) {
-    console.warn(chalk.yellow(`CLAUDE.mdの処理に失敗しました: ${error}`))
+    console.warn(chalk.yellow(t('create.claudeFailed', { error: String(error) })))
   }
 }
 
@@ -276,7 +277,7 @@ export async function executeCreateCommand(
 
   // Git リポジトリの確認
   if (!(await manager.isGitRepository())) {
-    console.error(chalk.red('エラー: このディレクトリはGitリポジトリではありません'))
+    console.error(chalk.red(t('errors.notGitRepo')))
     process.exit(1)
   }
 
@@ -327,7 +328,7 @@ export async function executeCreateCommand(
   if (shouldConfirm) {
     const confirmed = await confirmWorktreeCreation(enhancedBranchName, githubMetadata)
     if (!confirmed) {
-      console.log(chalk.yellow('キャンセルされました'))
+      console.log(chalk.yellow(t('common.cancel')))
       return
     }
   }
@@ -440,7 +441,7 @@ export async function createWorktreeWithProgress(
   githubMetadata: GithubMetadata | null,
   issueNumber: string | null
 ): Promise<string> {
-  const spinner = ora('新しい演奏者を招集中...').start()
+  const spinner = ora(t('create.newMember')).start()
 
   try {
     // Worktreeの作成
@@ -454,12 +455,12 @@ export async function createWorktreeWithProgress(
     })
 
     const displayPath = formatPath(worktreePath, config)
-    spinner.succeed(chalk.green(`✨ 新しい演奏者を招集しました: ${displayPath}`))
+    spinner.succeed(chalk.green(t('create.memberCreated', { path: displayPath })))
 
     return worktreePath
   } catch (error) {
     // spinnerを失敗状態にするが、エラーメッセージは上位層で処理
-    spinner.fail(chalk.red('演奏者の招集に失敗しました'))
+    spinner.fail(chalk.red(t('create.memberFailed')))
     throw error
   }
 }
@@ -548,7 +549,7 @@ export async function executePostCreationTasks(
 
 // 環境セットアップ
 export async function setupEnvironment(worktreePath: string, config: Config): Promise<void> {
-  const spinner = ora('環境をセットアップ中...').start()
+  const spinner = ora(t('create.environmentSetup')).start()
 
   try {
     // 依存関係のインストール
@@ -560,9 +561,9 @@ export async function setupEnvironment(worktreePath: string, config: Config): Pr
       await syncConfigFiles(worktreePath, config.development.syncFiles)
     }
 
-    spinner.succeed(chalk.green('✨ 環境セットアップが完了しました'))
+    spinner.succeed(chalk.green(t('create.environmentComplete')))
   } catch (error) {
-    spinner.fail(chalk.red(`環境セットアップに失敗しました: ${error}`))
+    spinner.fail(chalk.red(t('create.environmentFailed', { error: String(error) })))
   }
 }
 
@@ -618,7 +619,7 @@ export async function copyFilesFromCurrentWorktree(
   worktreePath: string,
   files: string[]
 ): Promise<void> {
-  const spinner = ora('ファイルをコピー中...').start()
+  const spinner = ora(t('create.copyingFiles')).start()
   const currentPath = process.cwd()
   let copiedCount = 0
   const gitignoreFiles: string[] = []
@@ -669,7 +670,7 @@ export async function copyFilesFromCurrentWorktree(
     }
 
     if (copiedCount > 0) {
-      spinner.succeed(chalk.green(`✨ ${copiedCount}個のファイルをコピーしました`))
+      spinner.succeed(chalk.green(t('create.filesCopied', { count: copiedCount })))
 
       if (gitignoreFiles.length > 0) {
         console.log(chalk.blue(`   gitignoreファイル: ${gitignoreFiles.join(', ')}`))
@@ -685,7 +686,7 @@ export async function copyFilesFromCurrentWorktree(
 
 // シェルに入る処理
 export async function enterShell(worktreePath: string, branchName: string): Promise<void> {
-  console.log(chalk.cyan(`\n🎼 演奏者 '${branchName}' のシェルに入ります...`))
+  console.log(chalk.cyan(t('create.enteringShell', { branch: branchName })))
 
   // 環境変数を設定
   const env = {
@@ -706,7 +707,7 @@ export async function enterShell(worktreePath: string, branchName: string): Prom
   // プロセスの終了を待つ
   return new Promise(resolve => {
     shellProcess.on('exit', () => {
-      console.log(chalk.gray('\n🎼 シェルを終了しました'))
+      console.log(chalk.gray(t('create.shellExited')))
       resolve()
     })
   })
@@ -746,7 +747,7 @@ export async function executeCommandInWorktree(
   worktreePath: string,
   command: string
 ): Promise<void> {
-  console.log(chalk.cyan(`\n🎵 コマンドを実行中: ${command}`))
+  console.log(chalk.cyan(t('create.commandRunning', { command })))
 
   try {
     await execa(command, [], {
@@ -754,12 +755,10 @@ export async function executeCommandInWorktree(
       shell: true,
       stdio: 'inherit',
     })
-    console.log(chalk.green('✨ コマンドが正常に実行されました'))
+    console.log(chalk.green(t('create.commandSuccess')))
   } catch (error) {
     console.error(
-      chalk.red(
-        `コマンドの実行に失敗しました: ${error instanceof Error ? error.message : '不明なエラー'}`
-      )
+      chalk.red(t('create.commandFailed', { error: error instanceof Error ? error.message : 'Unknown error' }))
     )
     throw error
   }

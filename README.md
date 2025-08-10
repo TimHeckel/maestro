@@ -160,27 +160,28 @@ mst create feature/api --tmux-h-panes 4 --tmux-layout tiled
 
 All panes share the same worktree directory, so you're always working on the same feature branch. Navigate between panes with `Ctrl+B` then arrow keys. Detach from the session with `Ctrl+B, D` (the session continues running in the background).
 
-**NEW in v5.1.1: Enhanced tmux Experience** 🎯
+**NEW in v5.2.0: Enhanced tmux Experience & Complete i18n** 🎯
 - **Automatic Help Display**: When creating multi-pane sessions or attaching, Maestro shows tmux navigation tips
 - **Easy Session Management**: Use `mst tmux-attach` (or `mst ta`) to easily reconnect to any tmux session
 - **Built-in Cheat Sheet**: Run `mst ta --help-tmux` to see the full tmux reference anytime
 - **Fixed Detachment**: When you detach (Ctrl+B, D), Maestro continues running and completes setup tasks
 - **Session Persistence**: Your tmux session remains active and can be re-attached with `mst ta <branch-name>`
+- **Complete i18n**: All hardcoded text replaced with proper translations (English/Japanese)
 
-#### Language Support (NEW!)
+#### Language Support (v5.2.0)
 
-Maestro now supports both **English** and **Japanese** interfaces:
+Maestro supports both **English** and **Japanese** interfaces:
 
 - **First-time setup**: `mst init` prompts for your preferred language
 - **Auto-detection**: Detects language from system locale if not specified
 - **Persistent**: Language preference is saved in `.maestro.json` and global config
-- **Bilingual help**: All command descriptions show both languages
+- **Complete translations**: All commands, messages, and errors fully translated
 
 Language priority order:
 1. Project `.maestro.json` setting
 2. Global `~/.maestro/config.json` setting  
 3. System locale (`$LANG` environment variable)
-4. Default: Japanese (for backward compatibility)
+4. Default: English (follows system locale)
 
 ### Basic Usage Examples
 
