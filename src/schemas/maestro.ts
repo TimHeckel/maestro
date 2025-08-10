@@ -4,18 +4,18 @@ import { z } from 'zod'
 
 export const SessionConfigSchema = z.object({
   name: z.string().min(1, 'Session name is required'),
-  panes: z.number().min(1).max(10, 'Panes must be between 1 and 10'),
+  panes: z.number().min(1).max(30, 'Panes must be between 1 and 30'),
   layout: z
     .enum(['even-horizontal', 'even-vertical', 'main-horizontal', 'main-vertical', 'tiled'])
     .optional(),
-  prompts: z.array(z.string()).min(1, 'At least one prompt is required'),
+  prompts: z.array(z.string()),
 })
 
 export const FeatureConfigSchema = z.object({
   feature: z.string().min(1, 'Feature name is required').regex(/^[a-zA-Z0-9-_]+$/, 'Feature name must be alphanumeric with dashes/underscores'),
   description: z.string().min(1, 'Description is required'),
-  branch_prefix: z.string().optional(),
-  sessions: z.array(SessionConfigSchema).min(1, 'At least one session is required'),
+  base: z.string().optional(),
+  sessions: z.array(SessionConfigSchema),
   claude_context: z.string().optional(),
   agents: z.array(z.string()).optional(),
   dependencies: z.array(z.string()).optional(),
@@ -32,7 +32,7 @@ export const MaestroConfigSchema = z.object({
   version: z.string().regex(/^\d+\.\d+$/, 'Version must be in format X.Y'),
   created: z.string(), // Will be validated as date string
   description: z.string().optional(),
-  orchestra: z.array(FeatureConfigSchema).min(1, 'At least one feature is required'),
+  orchestra: z.array(FeatureConfigSchema),
   settings: OrchestraSettingsSchema.optional(),
 })
 

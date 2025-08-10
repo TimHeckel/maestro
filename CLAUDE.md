@@ -128,6 +128,46 @@ The orchestration configuration file that defines:
 - tmux is required for orchestration features
 - All orchestration commands check for tmux availability
 
+## Recent Improvements (v5.4.0)
+
+### Claude-First Orchestration Planning
+- **AI-Assisted Planning**: `mst plan` now defaults to Claude AI assistance
+- **Tickle Prompt System**: Sends special prompt that Claude recognizes for interactive planning
+- **Manual Mode Option**: Use `--manual` flag for traditional step-by-step prompts
+- **Project Detection**: Automatically detects project type (Node.js, Python, Go, etc.)
+- **Natural Conversation**: Plan orchestration through conversation instead of filling out forms
+- **Smart MAESTRO.yml Generation**: Claude analyzes codebase and suggests optimal parallel workflows
+
+### How to Use Claude Planning
+```bash
+# Default: Claude helps you plan
+mst plan
+
+# Manual mode: Traditional prompts
+mst plan --manual
+
+# See all options
+mst plan --help
+```
+
+When using Claude mode, I will:
+1. Ask about your development goals
+2. Analyze your codebase structure
+3. Suggest parallel features to implement
+4. Generate optimal tmux configurations
+5. Create MAESTRO.yml with proper dependencies
+
+## Recent Improvements (v5.3.0)
+
+### Complete Orchestration System
+- **Three-Command Workflow**: `mst plan` → `mst implement` → `mst orchestra`
+- **MAESTRO.yml**: Configuration file for orchestration plans
+- **Parallel Worktree Creation**: Create multiple worktrees simultaneously
+- **tmux Session Management**: Auto-create detached sessions with configured layouts
+- **Prompt Injection**: Pre-fill commands in panes (not auto-executed)
+- **Dependency Resolution**: Handle feature dependencies intelligently
+- **Claude Context**: Customize CLAUDE.md for each worktree with orchestration info
+
 ## Recent Improvements (v5.2.1)
 
 ### Complete i18n Implementation

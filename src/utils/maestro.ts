@@ -1,7 +1,7 @@
 import * as yaml from 'js-yaml'
 import { readFile, writeFile, access } from 'fs/promises'
 import path from 'path'
-import { MaestroConfig, validateMaestroConfig } from '../schemas/maestro.js'
+import { MaestroConfig, validateMaestroConfig as validateSchema } from '../schemas/maestro.js'
 import chalk from 'chalk'
 
 // MAESTRO.yml file operations
@@ -23,12 +23,24 @@ export async function maestroExists(): Promise<boolean> {
 /**
  * Load and parse MAESTRO.yml
  */
-export async function loadMaestroConfig(): Promise<MaestroConfig> {
+export async function loadMaestroConfig(): Promise<MaestroConfig | null> {
   try {
+    await access(MAESTRO_FILE)
     const content = await readFile(MAESTRO_FILE, 'utf8')
     const rawConfig = yaml.load(content)
-    return validateMaestroConfig(rawConfig)
-  } catch (error) {
+    
+    if (!rawConfig) {
+      return null
+    }
+    
+    return validateSchema(rawConfig)
+  } catch (error: any) {
+    // File doesn't exist
+    if (error?.code === 'ENOENT') {
+      return null
+    }
+    
+    // YAML parsing or validation error
     if (error instanceof Error) {
       throw new Error(`Failed to load MAESTRO.yml: ${error.message}`)
     }
@@ -42,7 +54,7 @@ export async function loadMaestroConfig(): Promise<MaestroConfig> {
 export async function saveMaestroConfig(config: MaestroConfig): Promise<void> {
   try {
     // Validate before saving
-    validateMaestroConfig(config)
+    validateSchema(config)
     
     const yamlContent = yaml.dump(config, {
       indent: 2,
@@ -166,6 +178,57 @@ export function getFeatureOrder(config: MaestroConfig): string[] {
   }
   
   return order
+}
+
+/**
+ * Validate maestro configuration - wrapper for schema validation
+ */
+export function validateMaestroConfig(config: any): boolean {
+  try {
+    validateSchema(config)
+    return true
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Resolve feature dependencies
+ */
+export function resolveDependencies(features: string[], config: MaestroConfig): string[] {
+  const resolved: string[] = []
+  const visiting = new Set<string>()
+  const visited = new Set<string>()
+  
+  const featureMap = new Map(config.orchestra.map(f => [f.feature, f]))
+  
+  function visit(featureName: string): void {
+    if (visited.has(featureName)) return
+    if (visiting.has(featureName)) {
+      throw new Error(`Circular dependency detected: ${featureName}`)
+    }
+    
+    const feature = featureMap.get(featureName)
+    if (!feature) return // Skip unknown dependencies
+    
+    visiting.add(featureName)
+    
+    if (feature.dependencies) {
+      for (const dep of feature.dependencies) {
+        visit(dep)
+      }
+    }
+    
+    visiting.delete(featureName)
+    visited.add(featureName)
+    resolved.push(featureName)
+  }
+  
+  for (const featureName of features) {
+    visit(featureName)
+  }
+  
+  return resolved
 }
 
 /**

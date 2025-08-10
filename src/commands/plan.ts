@@ -2,6 +2,8 @@ import { Command } from 'commander'
 import chalk from 'chalk'
 import inquirer from 'inquirer'
 import ora from 'ora'
+import * as fs from 'fs/promises'
+import * as path from 'path'
 import { checkTmuxInstalled } from '../utils/orchestration.js'
 import { 
   maestroExists, 
@@ -12,12 +14,68 @@ import {
 import { FeatureConfig, SessionConfig } from '../types/orchestration.js'
 import { t } from '../i18n/index.js'
 
+// Detect project type for Claude context
+async function detectProjectType(): Promise<string> {
+  try {
+    const cwd = process.cwd()
+    
+    // Check for common project files
+    const checks = [
+      { file: 'package.json', type: 'Node.js' },
+      { file: 'Cargo.toml', type: 'Rust' },
+      { file: 'go.mod', type: 'Go' },
+      { file: 'requirements.txt', type: 'Python' },
+      { file: 'Gemfile', type: 'Ruby' },
+      { file: 'pom.xml', type: 'Java/Maven' },
+      { file: 'build.gradle', type: 'Java/Gradle' },
+      { file: 'composer.json', type: 'PHP' },
+      { file: '.csproj', type: 'C#/.NET' },
+    ]
+    
+    for (const check of checks) {
+      try {
+        await fs.access(path.join(cwd, check.file))
+        return check.type
+      } catch {
+        // File doesn't exist, try next
+      }
+    }
+    
+    return 'Unknown'
+  } catch {
+    return 'Unknown'
+  }
+}
+
 export const planCommand = new Command('plan')
-  .description('Plan an orchestrated development workflow / 開発ワークフローのオーケストレーションを計画')
-  .option('-y, --yes', 'Skip confirmation prompts / 確認プロンプトをスキップ')
-  .option('--example', 'Generate example MAESTRO.yml / サンプルMAESTRO.ymlを生成')
+  .description('Plan an orchestrated development workflow with Claude AI assistance')
+  .option('-y, --yes', 'Skip confirmation prompts')
+  .option('--example', 'Generate example MAESTRO.yml')
+  .option('--manual', 'Use manual interactive prompts instead of Claude')
+  .addHelpText('after', `
+Examples:
+  $ mst plan                  # Default: Use Claude to help plan orchestration
+  $ mst plan --manual         # Use manual interactive prompts
+  $ mst plan --example        # Generate an example MAESTRO.yml
+  
+Claude Mode (default):
+  When run without --manual, this command will prompt Claude to help you:
+  - Analyze your codebase structure
+  - Suggest parallel development workflows
+  - Generate optimal tmux session configurations
+  - Create a MAESTRO.yml with proper dependencies
+  
+Manual Mode (--manual):
+  Step-by-step prompts to manually configure:
+  - Feature definitions
+  - tmux session layouts
+  - Command prompts for each pane
+  - Dependencies between features
+  
+Note: tmux is required for all orchestration features.
+Install with: brew install tmux (macOS) or apt-get install tmux (Linux)`)
   .exitOverride()
-  .action(async (options: { yes?: boolean; example?: boolean }) => {
+  .action(async (options: { yes?: boolean; example?: boolean; manual?: boolean }) => {
     try {
       // Check tmux requirement
       if (!(await checkTmuxInstalled())) {
@@ -44,7 +102,47 @@ export const planCommand = new Command('plan')
         }
       }
       
-      console.log(chalk.cyan.bold('🎼 Maestro Orchestration Planner\n'))
+      // Default to Claude mode unless --manual is specified
+      const useManualMode = options.manual
+      
+      if (!useManualMode) {
+        // Claude mode (default): Send a tickle prompt
+        console.log(chalk.cyan.bold('🎼 Maestro Orchestration Planner\n'))
+        console.log(chalk.yellow('📋 Initiating Claude AI assistance for orchestration planning...\n'))
+        
+        // Send the tickle prompt that Claude will recognize
+        console.log(chalk.magenta(`
+═══════════════════════════════════════════════════════════════════
+🤖 CLAUDE ORCHESTRATION PLANNING REQUEST
+═══════════════════════════════════════════════════════════════════
+
+Claude, the user wants to plan an orchestration for their project.
+Please help them by:
+
+1. Asking about their development goals
+2. Analyzing the codebase structure  
+3. Suggesting an orchestration plan with:
+   - Multiple features to implement in parallel
+   - tmux session configurations
+   - Appropriate prompts for each pane
+   - Dependencies between features
+4. Generating a MAESTRO.yml file
+
+Current directory: ${process.cwd()}
+Project type: ${await detectProjectType()}
+
+Please start by asking the user what they want to build.
+═══════════════════════════════════════════════════════════════════
+        `))
+        
+        console.log(chalk.green('\n✨ Claude will now help you plan your orchestration.'))
+        console.log(chalk.gray('Once Claude generates MAESTRO.yml, run: mst implement'))
+        console.log(chalk.gray('To use manual prompts instead, run: mst plan --manual\n'))
+        return
+      }
+      
+      // Manual interactive mode (when --manual is specified)
+      console.log(chalk.cyan.bold('🎼 Maestro Orchestration Planner - Manual Mode\n'))
       
       // Generate example if requested
       if (options.example) {

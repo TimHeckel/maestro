@@ -244,6 +244,62 @@ export async function getTmuxSessionStatus(sessionName: string): Promise<'active
   }
 }
 
+// Create an orchestra session (wrapper for compatibility)
+export async function createOrchestraSession(
+  feature: FeatureConfig,
+  options: { skipWorktree?: boolean } = {},
+  t: any
+): Promise<void> {
+  const manager = new GitWorktreeManager()
+  let worktreePath: string
+  
+  if (!options.skipWorktree) {
+    const branchName = feature.feature
+    worktreePath = await manager.createWorktree(branchName, feature.base || 'main')
+  } else {
+    worktreePath = await manager.getWorktreePath(feature.feature)
+  }
+  
+  // Create tmux sessions
+  for (const session of feature.sessions || []) {
+    const sessionName = await createTmuxSession(feature.feature, session, worktreePath)
+    
+    // Inject prompts
+    if (session.prompts && session.prompts.length > 0) {
+      await injectPrompts(sessionName, session.prompts)
+    }
+  }
+  
+  // Create CLAUDE.md
+  if (feature.claude_context || feature.agents) {
+    await customizeClaudeMd(feature, worktreePath)
+  }
+}
+
+// Attach to a tmux session
+export async function attachToSession(
+  sessionName: string,
+  t: any
+): Promise<void> {
+  await execa('tmux', ['attach-session', '-t', sessionName], { stdio: 'inherit' })
+}
+
+// Get running orchestra sessions
+export async function getRunningOrchestraSessions(filter?: string): Promise<string[]> {
+  try {
+    const { stdout } = await execa('tmux', ['list-sessions', '-F', '#{session_name}'])
+    const sessions = stdout.split('\n').filter(Boolean)
+    
+    if (filter) {
+      return sessions.filter(s => s.includes(filter))
+    }
+    
+    return sessions
+  } catch {
+    return []
+  }
+}
+
 // Display implementation summary
 export function displayImplementationSummary(
   features: FeatureConfig[],

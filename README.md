@@ -266,43 +266,132 @@ mst push --pr                                  # push with PR
 mst review --auto-flow                         # auto review & merge
 ```
 
-## Orchestration Mode (NEW!) 🎭
+## Orchestration Mode 🎭 - AI-Powered Parallel Development (v5.4.0)
 
-Maestro can now act as a true "conductor" - planning and executing entire parallel development workflows with pre-configured prompts for each worktree.
+Maestro acts as a true "conductor" - using Claude AI to plan and execute entire parallel development workflows with pre-configured prompts for each worktree.
+
+### Prerequisites
+
+**tmux is required** for orchestration features:
+```bash
+brew install tmux  # macOS
+# or
+sudo apt-get install tmux  # Ubuntu/Debian
+```
 
 ### How It Works
 
-1. **Plan**: `mst plan` - Interactive session to design your orchestration
+1. **Plan**: `mst plan` - Claude AI helps design your orchestration
 2. **Implement**: `mst implement` - Execute the plan, creating all worktrees and sessions
 3. **Orchestra**: `mst orchestra` - Monitor and manage your orchestration
 
-### Example Workflow
+### 🆕 Claude-First Planning
+
+#### Step 1: Plan Your Orchestration with AI
+```bash
+mst plan              # Default: Claude AI assists you
+mst plan --manual     # Optional: Use traditional prompts
+mst plan --help       # See all options
+```
+
+**Claude Mode (Default):**
+When you run `mst plan`, Claude will:
+1. **Ask about your goals** - Natural conversation about what you want to build
+2. **Analyze your codebase** - Understand project structure and dependencies
+3. **Suggest parallel workflows** - Optimal feature breakdown for parallel development
+4. **Generate MAESTRO.yml** - Complete orchestration configuration
+
+**Example Session:**
+```
+$ mst plan
+🎼 Maestro Orchestration Planner
+📋 Initiating Claude AI assistance...
+
+[Claude]: What features would you like to implement?
+[You]: I need authentication and payment processing
+[Claude]: I'll analyze your codebase and create an orchestration plan...
+[Claude generates MAESTRO.yml with optimal parallel setup]
+```
+
+The plan is saved to `MAESTRO.yml`.
+
+#### Step 2: Execute the Orchestration
+```bash
+mst implement
+# or
+mst implement --all        # Implement all features
+mst implement --dry-run    # Preview what would be created
+```
+
+**What happens during implementation:**
+1. Creates Git worktrees for each feature
+2. Creates **detached** tmux sessions (running in background)
+3. Injects prompts into each pane but **does NOT execute them**
+4. Creates customized CLAUDE.md files with context
+5. Shows summary of created sessions
+
+**Important**: Sessions are created in the background. You won't see them immediately!
+
+#### Step 3: Attach to Sessions and Start Working
+```bash
+# View all created sessions
+mst orchestra
+
+# Attach to a specific session
+mst orchestra attach
+# or
+tmux attach -t feature-backend
+
+# View orchestration status
+mst orchestra status
+```
+
+**When you attach to a session:**
+- You'll see pre-filled prompts in each pane
+- Press **Enter** in each pane to execute the commands
+- Navigate between panes with `Ctrl+B` then arrow keys
+- Detach with `Ctrl+B, D` to leave session running
+
+### Complete Example
 
 ```bash
-# 1. Plan your orchestration
+# 1. Plan a microservices architecture
 mst plan
 
-# Interactive prompts guide you through:
-# - Defining features to implement
-# - Configuring tmux sessions and panes
-# - Setting initial prompts for each pane
-# - Assigning Claude agents
-# - Managing dependencies between features
+# Example responses:
+# Project: "E-commerce microservices"
+# Feature 1: "auth-service"
+#   - Session: backend (3 panes)
+#     - Pane 1: "npm run dev"
+#     - Pane 2: "npm test --watch"
+#     - Pane 3: "tail -f logs/auth.log"
+# Feature 2: "payment-service"
+#   - Session: backend (2 panes)
+#     - Pane 1: "npm run dev"
+#     - Pane 2: "npm test --watch"
 
-# 2. Execute the orchestration
+# 2. Execute the plan
 mst implement
+# Output:
+# ✓ Created worktree for auth-service
+# ✓ Created worktree for payment-service
+# ✓ Created tmux session: auth-service-backend (3 panes)
+# ✓ Created tmux session: payment-service-backend (2 panes)
+#
+# Next steps:
+# 1. Attach to sessions: mst orchestra attach
+# 2. Press Enter in each pane to execute commands
+# 3. Start developing!
 
-# This will:
-# ✓ Create all worktrees in parallel
-# ✓ Spawn tmux sessions with configured layouts
-# ✓ Pre-fill prompts in each pane (not auto-executed)
-# ✓ Customize CLAUDE.md for each worktree
-# ✓ Configure assigned agents
+# 3. Start working
+mst orchestra attach
+# Select: auth-service-backend
+# [You're now in tmux with 3 panes]
+# [Press Enter in each pane to start services]
 
-# 3. Manage your orchestra
-mst orchestra          # List all sessions
-mst orchestra status   # Detailed status
-mst orchestra attach   # Interactive session selector
+# 4. Monitor progress
+mst orchestra status
+# Shows all features, sessions, and their states
 ```
 
 ### MAESTRO.yml Structure
@@ -311,27 +400,58 @@ The orchestration plan is stored in `MAESTRO.yml`:
 
 ```yaml
 version: "1.0"
+created: "2024-01-01T00:00:00Z"
+description: "E-commerce microservices architecture"
 orchestra:
   - feature: user-auth
     description: OAuth2 authentication system
+    base: main
     sessions:
       - name: backend
         panes: 3
         layout: main-vertical
         prompts:
-          - "# Implement OAuth2 endpoints"
-          - "npm test --watch"
           - "npm run dev"
+          - "npm test --watch"
+          - "docker-compose logs -f auth"
     claude_context: |
       Use Passport.js for OAuth2
       Implement JWT with refresh tokens
     agents: [code-reviewer, security-scanner]
+    dependencies: []
+    
+  - feature: payment-service
+    description: Payment processing with Stripe
+    base: main
+    sessions:
+      - name: api
+        panes: 2
+        layout: even-horizontal
+        prompts:
+          - "npm run dev"
+          - "stripe listen --forward-to localhost:3001/webhook"
+    dependencies: [user-auth]  # Depends on auth being completed first
+
+settings:
+  parallel: true        # Create worktrees in parallel
+  auto_attach: false    # Don't auto-attach to sessions
 ```
 
-### Requirements
+### Key Concepts
 
-- **tmux required**: Orchestration features require tmux for session management
-- Install with: `brew install tmux`
+- **Detached Sessions**: tmux sessions run in background until you attach
+- **Prompt Injection**: Commands are typed but not executed - you press Enter
+- **Dependencies**: Features can depend on others for ordered execution
+- **Parallel Creation**: Multiple worktrees created simultaneously for speed
+
+### Troubleshooting
+
+| Issue | Solution |
+|-------|----------|
+| "tmux required" error | Install tmux: `brew install tmux` |
+| Sessions not visible | Use `mst orchestra` to list, they're detached |
+| Prompts not appearing | Check pane count matches prompt count |
+| Can't attach to session | Session may have been killed, use `mst orchestra status` |
 
 ## Advanced Features
 
