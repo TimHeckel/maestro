@@ -1,5 +1,16 @@
 # Changelog
 
+## 5.5.0
+
+### Minor Changes
+
+- Unified orchestration configuration in .maestro.json
+  - Orchestration plans now stored in `.maestro.json` under the `orchestration` key instead of separate MAESTRO.yml
+  - Updated field names to camelCase (e.g., `claudeContext`, `autoAttach`)
+  - All commands (plan, implement, orchestra) now use the unified configuration
+  - Maintains conceptual "MAESTRO plan" name for user-facing messages
+  - Improved configuration consistency across the entire tool
+
 ## 5.4.0
 
 ### Minor Changes
@@ -14,7 +25,7 @@
   - **Natural Conversation** - Plan through discussion instead of filling forms
   - **Project Detection** - Automatically detects project type (Node.js, Python, Go, etc.)
   - **Manual Mode Option** - Use `--manual` flag for traditional step-by-step prompts
-  
+
   ### Enhanced Help System
   - Comprehensive help with `mst plan --help`
   - Clear examples and mode explanations
@@ -25,13 +36,14 @@
   - Use `mst plan --manual` for the previous behavior
 
   ### Example Usage
+
   ```bash
   # Default: Claude helps you plan
   mst plan
-  
+
   # Traditional prompts
   mst plan --manual
-  
+
   # See all options
   mst plan --help
   ```

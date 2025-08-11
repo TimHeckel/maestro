@@ -267,7 +267,7 @@ mst push --pr                                  # push with PR
 mst review --auto-flow                         # auto review & merge
 ```
 
-## Orchestration Mode 🎭 - AI-Powered Parallel Development (v5.4.0)
+## Orchestration Mode 🎭 - AI-Powered Parallel Development (v5.5.0)
 
 Maestro acts as a true "conductor" - using Claude AI to plan and execute entire parallel development workflows with pre-configured prompts for each worktree.
 
@@ -286,7 +286,9 @@ sudo apt-get install tmux  # Ubuntu/Debian
 2. **Implement**: `mst implement` - Execute the plan, creating all worktrees and sessions
 3. **Orchestra**: `mst orchestra` - Monitor and manage your orchestration
 
-### 🆕 Claude-First Planning
+### 🆕 Claude-First Planning (v5.4.0+)
+
+**v5.5.0 Update**: Orchestration plans now stored in `.maestro.json` under the `orchestration` key instead of separate MAESTRO.yml files.
 
 #### Step 1: Plan Your Orchestration with AI
 ```bash

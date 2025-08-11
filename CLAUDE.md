@@ -129,13 +129,16 @@ The orchestration plan is stored in `.maestro.json` under the `orchestration` ke
 - tmux is required for orchestration features
 - All orchestration commands check for tmux availability
 
-## Recent Improvements (v5.4.0)
+## Recent Improvements (v5.5.0)
 
 ### Unified Orchestration Configuration
 - **Single Config File**: Orchestration now stored in `.maestro.json` instead of separate MAESTRO.yml
 - **Hybrid Approach**: Stores orchestration config under `orchestration` key in existing `.maestro.json`
 - **Consistent Field Names**: Updated to use camelCase (e.g., `claudeContext` instead of `claude_context`)
 - **Backward Compatibility**: Conceptual "MAESTRO plan" name retained for user messaging
+- **ConfigManager Integration**: Fixed to use instance methods for proper configuration handling
+
+## Recent Improvements (v5.4.0)
 
 ### Claude-First Orchestration Planning
 - **AI-Assisted Planning**: `mst plan` now defaults to Claude AI assistance
@@ -162,13 +165,13 @@ When using Claude mode, I will:
 2. Analyze your codebase structure
 3. Suggest parallel features to implement
 4. Generate optimal tmux configurations
-5. Create MAESTRO.yml with proper dependencies
+5. Create orchestration plan with proper dependencies
 
 ## Recent Improvements (v5.3.0)
 
 ### Complete Orchestration System
 - **Three-Command Workflow**: `mst plan` → `mst implement` → `mst orchestra`
-- **MAESTRO.yml**: Configuration file for orchestration plans
+- **Orchestration Plans**: Initially stored in MAESTRO.yml (now in .maestro.json as of v5.5.0)
 - **Parallel Worktree Creation**: Create multiple worktrees simultaneously
 - **tmux Session Management**: Auto-create detached sessions with configured layouts
 - **Prompt Injection**: Pre-fill commands in panes (not auto-executed)
