@@ -13,10 +13,10 @@ import {
 import { 
   loadMaestroConfig,
   validateDependencies,
-  getFeatureOrder,
+  getTopologicalOrder,
   displayOrchestrationSummary
 } from '../utils/maestro.js'
-import { OrchestraState } from '../types/orchestration.js'
+import { OrchestraState, FeatureConfig } from '../types/orchestration.js'
 import { GitWorktreeManager } from '../core/git.js'
 import { t } from '../i18n/index.js'
 import { detectPackageManager } from '../utils/packageManager.js'
@@ -24,7 +24,7 @@ import { execa } from 'execa'
 import path from 'path'
 
 export const implementCommand = new Command('implement')
-  .description('Execute the orchestration plan from MAESTRO.yml / MAESTRO.ymlからオーケストレーションプランを実行')
+  .description('Execute the orchestration plan from .maestro.json')
   .option('--dry-run', 'Show what would be created without executing / 実行せずに作成内容を表示')
   .option('--skip-deps', 'Skip dependency installation / 依存関係のインストールをスキップ')
   .option('--sequential', 'Create features sequentially (not parallel) / 順次作成（並列ではなく）')
@@ -44,9 +44,14 @@ export const implementCommand = new Command('implement')
         process.exit(1)
       }
       
-      // Load MAESTRO.yml
-      console.log(chalk.cyan('📖 Loading MAESTRO.yml...'))
+      // Load orchestration plan
+      console.log(chalk.cyan('📖 Loading orchestration plan from .maestro.json...'))
       const config = await loadMaestroConfig()
+      
+      if (!config) {
+        console.error(chalk.red('✖ No orchestration plan found. Run "mst plan" first.'))
+        process.exit(1)
+      }
       
       // Validate dependencies
       const validation = validateDependencies(config)
@@ -62,16 +67,18 @@ export const implementCommand = new Command('implement')
       if (options.dryRun) {
         console.log(chalk.yellow('\n📝 Dry run mode - no changes will be made'))
         
-        const order = getFeatureOrder(config)
+        const order = getTopologicalOrder(config)
         console.log(chalk.cyan('\nExecution order:'))
         order.forEach((f, i) => console.log(chalk.gray(`  ${i + 1}. ${f}`)))
         
         console.log(chalk.cyan('\nWould create:'))
-        for (const feature of config.orchestra) {
-          console.log(chalk.gray(`  - Worktree: ${feature.feature}`))
-          for (const session of feature.sessions) {
-            const sessionName = `${feature.feature}-${session.name}`.replace(/[^a-zA-Z0-9-]/g, '-')
-            console.log(chalk.gray(`    - Session: ${sessionName} (${session.panes} panes)`))
+        for (const feature of config.features || []) {
+          console.log(chalk.gray(`  - Worktree: ${feature.name}`))
+          if (feature.sessions) {
+            for (const session of feature.sessions) {
+              const sessionName = `${feature.name}-${session.name}`.replace(/[^a-zA-Z0-9-]/g, '-')
+              console.log(chalk.gray(`    - Session: ${sessionName} (${session.panes} panes)`))
+            }
           }
         }
         return
@@ -80,22 +87,22 @@ export const implementCommand = new Command('implement')
       console.log(chalk.cyan.bold('\n🎼 Starting Orchestration...\n'))
       
       // Get features in dependency order
-      const featureOrder = getFeatureOrder(config)
-      const orderedFeatures = featureOrder.map(name => 
-        config.orchestra.find(f => f.feature === name)!
-      )
+      const featureOrder = getTopologicalOrder(config)
+      const orderedFeatures = featureOrder
+        .map(name => config.features?.find(f => f.name === name))
+        .filter(f => f !== undefined) as NonNullable<typeof config.features>
       
       // Create worktrees
       const createSpinner = ora('Creating worktrees...').start()
       const worktreePaths = await createWorktrees(
         orderedFeatures,
-        config.settings?.base_branch || 'main',
-        !options.sequential && (config.settings?.parallel_creation ?? true)
+        'main',  // Use main as default, features have their own base
+        !options.sequential && (config.settings?.parallel ?? true)
       )
       createSpinner.succeed(`Created ${worktreePaths.size} worktrees`)
       
       // Install dependencies if needed
-      if (!options.skipDeps && config.settings?.auto_install_deps) {
+      if (!options.skipDeps) {
         const depSpinner = ora('Installing dependencies...').start()
         
         for (const [feature, worktreePath] of worktreePaths) {
@@ -121,30 +128,34 @@ export const implementCommand = new Command('implement')
       const sessionSpinner = ora('Creating tmux sessions...').start()
       
       for (const feature of orderedFeatures) {
-        const worktreePath = worktreePaths.get(feature.feature)
+        const worktreePath = worktreePaths.get(feature.name)
         if (!worktreePath) continue
         
         const featureSessions: string[] = []
         
-        for (const session of feature.sessions) {
-          sessionSpinner.text = `Creating session ${feature.feature}-${session.name}...`
-          
-          // Create tmux session
-          const sessionName = await createTmuxSession(feature.feature, session, worktreePath)
-          featureSessions.push(sessionName)
-          
-          // Inject prompts
-          await injectPrompts(sessionName, session.prompts)
+        if (feature.sessions) {
+          for (const session of feature.sessions) {
+            sessionSpinner.text = `Creating session ${feature.name}-${session.name}...`
+            
+            // Create tmux session
+            const sessionName = await createTmuxSession(feature.name, session, worktreePath)
+            featureSessions.push(sessionName)
+            
+            // Inject prompts
+            await injectPrompts(sessionName, session.prompts)
+          }
         }
         
-        sessionMap.set(feature.feature, featureSessions)
+        sessionMap.set(feature.name, featureSessions)
         
-        // Customize CLAUDE.md
-        await customizeClaudeMd(
-          feature,
-          worktreePath,
-          config.settings?.claude_md_mode || 'split'
-        )
+        // Customize CLAUDE.md if context provided
+        if (feature.claudeContext || feature.agents) {
+          await customizeClaudeMd(
+            feature,
+            worktreePath,
+            'split'  // Default to split mode for orchestration
+          )
+        }
       }
       
       sessionSpinner.succeed('All tmux sessions created')
@@ -154,13 +165,13 @@ export const implementCommand = new Command('implement')
         created_at: new Date().toISOString(),
         status: 'active',
         features: orderedFeatures.map(f => ({
-          feature: f.feature,
-          worktree_path: worktreePaths.get(f.feature) || '',
+          feature: f.name,
+          worktree_path: worktreePaths.get(f.name) || '',
           status: 'created',
           created_at: new Date().toISOString(),
-          sessions: f.sessions.map(s => ({
+          sessions: (f.sessions || []).map(s => ({
             name: s.name,
-            session_name: `${f.feature}-${s.name}`.replace(/[^a-zA-Z0-9-]/g, '-'),
+            session_name: `${f.name}-${s.name}`.replace(/[^a-zA-Z0-9-]/g, '-'),
             panes: s.panes,
             status: 'created',
             attached_count: 0,

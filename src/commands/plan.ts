@@ -102,6 +102,12 @@ Install with: brew install tmux (macOS) or apt-get install tmux (Linux)`)
         }
       }
       
+      // Generate example if requested
+      if (options.example) {
+        await generateExampleMaestro()
+        return
+      }
+      
       // Default to Claude mode unless --manual is specified
       const useManualMode = options.manual
       
@@ -144,12 +150,6 @@ Please start by asking the user what they want to build.
       // Manual interactive mode (when --manual is specified)
       console.log(chalk.cyan.bold('🎼 Maestro Orchestration Planner - Manual Mode\n'))
       
-      // Generate example if requested
-      if (options.example) {
-        await generateExampleMaestro()
-        return
-      }
-      
       // Interactive planning session
       const config = generateDefaultMaestroConfig()
       
@@ -191,7 +191,7 @@ Please start by asking the user what they want to build.
         }
       }
       
-      config.orchestra = features
+      config.features = features
       
       // Configure settings
       if (!options.yes) {
@@ -210,9 +210,9 @@ Please start by asking the user what they want to build.
       }
       
       // Save configuration
-      const spinner = ora('Saving MAESTRO.yml...').start()
+      const spinner = ora('Saving orchestration plan to .maestro.json...').start()
       await saveMaestroConfig(config)
-      spinner.succeed('MAESTRO.yml saved')
+      spinner.succeed('Orchestration plan saved to .maestro.json')
       
       // Display summary
       displayOrchestrationSummary(config)
@@ -230,7 +230,7 @@ async function planFeature(skipPrompts?: boolean): Promise<FeatureConfig> {
   if (skipPrompts) {
     // Generate minimal feature for --yes mode
     return {
-      feature: 'sample-feature',
+      name: 'sample-feature',
       description: 'Sample feature',
       sessions: [
         {
@@ -246,10 +246,10 @@ async function planFeature(skipPrompts?: boolean): Promise<FeatureConfig> {
   }
   
   // Feature basic info
-  const { feature, description, branchPrefix } = await inquirer.prompt([
+  const { name, description, baseBranch } = await inquirer.prompt([
     {
       type: 'input',
-      name: 'feature',
+      name: 'name',
       message: 'Feature name (alphanumeric with dashes):',
       validate: (input: string) => {
         if (!/^[a-zA-Z0-9-_]+$/.test(input)) {
@@ -266,9 +266,9 @@ async function planFeature(skipPrompts?: boolean): Promise<FeatureConfig> {
     },
     {
       type: 'input',
-      name: 'branchPrefix',
-      message: 'Branch prefix (optional, e.g., "feature/"):',
-      default: '',
+      name: 'baseBranch',
+      message: 'Base branch (default: main):',
+      default: 'main',
     },
   ])
   
@@ -440,15 +440,15 @@ async function configureSettings() {
 }
 
 async function generateExampleMaestro() {
-  const example = {
+  const example: Config['orchestration'] = {
     version: '1.0',
     created: new Date().toISOString(),
     description: 'Example orchestration for a full-stack feature',
-    orchestra: [
+    features: [
       {
-        feature: 'user-auth',
+        name: 'user-auth',
         description: 'Complete authentication system',
-        branch_prefix: 'feature/',
+        base: 'main',
         sessions: [
           {
             name: 'backend',
@@ -470,7 +470,7 @@ async function generateExampleMaestro() {
             ],
           },
         ],
-        claude_context: `## Authentication Implementation
+        claudeContext: `## Authentication Implementation
 
 - Use Passport.js for OAuth2
 - Implement JWT with refresh tokens
@@ -479,9 +479,9 @@ async function generateExampleMaestro() {
         agents: ['code-reviewer', 'security-scanner'],
       },
       {
-        feature: 'payment',
+        name: 'payment',
         description: 'Stripe payment integration',
-        branch_prefix: 'feature/',
+        base: 'main',
         sessions: [
           {
             name: 'api',
@@ -496,19 +496,17 @@ async function generateExampleMaestro() {
       },
     ],
     settings: {
-      parallel_creation: true,
-      auto_install_deps: true,
-      claude_md_mode: 'split',
-      base_branch: 'main',
+      parallel: true,
+      autoAttach: false,
     },
   }
   
-  const spinner = ora('Generating example MAESTRO.yml...').start()
+  const spinner = ora('Generating example orchestration plan...').start()
   await saveMaestroConfig(example)
-  spinner.succeed('Example MAESTRO.yml created')
+  spinner.succeed('Example orchestration plan saved to .maestro.json')
   
   displayOrchestrationSummary(example)
   
   console.log(chalk.green.bold('\n✨ Example orchestration ready!'))
-  console.log(chalk.cyan('Review MAESTRO.yml and run'), chalk.white('mst implement'), chalk.cyan('to execute'))
+  console.log(chalk.cyan('Review .maestro.json and run'), chalk.white('mst implement'), chalk.cyan('to execute'))
 }

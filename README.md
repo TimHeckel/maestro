@@ -300,7 +300,7 @@ When you run `mst plan`, Claude will:
 1. **Ask about your goals** - Natural conversation about what you want to build
 2. **Analyze your codebase** - Understand project structure and dependencies
 3. **Suggest parallel workflows** - Optimal feature breakdown for parallel development
-4. **Generate MAESTRO.yml** - Complete orchestration configuration
+4. **Generate orchestration plan** - Saved to .maestro.json
 
 **Example Session:**
 ```
@@ -311,10 +311,10 @@ $ mst plan
 [Claude]: What features would you like to implement?
 [You]: I need authentication and payment processing
 [Claude]: I'll analyze your codebase and create an orchestration plan...
-[Claude generates MAESTRO.yml with optimal parallel setup]
+[Claude generates orchestration plan with optimal parallel setup]
 ```
 
-The plan is saved to `MAESTRO.yml`.
+The orchestration plan is saved to `.maestro.json` under the `orchestration` key.
 
 #### Step 2: Execute the Orchestration
 ```bash
@@ -395,47 +395,61 @@ mst orchestra status
 # Shows all features, sessions, and their states
 ```
 
-### MAESTRO.yml Structure
+### Orchestration Plan Structure
 
-The orchestration plan is stored in `MAESTRO.yml`:
+The orchestration plan is stored in `.maestro.json` under the `orchestration` key:
 
-```yaml
-version: "1.0"
-created: "2024-01-01T00:00:00Z"
-description: "E-commerce microservices architecture"
-orchestra:
-  - feature: user-auth
-    description: OAuth2 authentication system
-    base: main
-    sessions:
-      - name: backend
-        panes: 3
-        layout: main-vertical
-        prompts:
-          - "npm run dev"
-          - "npm test --watch"
-          - "docker-compose logs -f auth"
-    claude_context: |
-      Use Passport.js for OAuth2
-      Implement JWT with refresh tokens
-    agents: [code-reviewer, security-scanner]
-    dependencies: []
-    
-  - feature: payment-service
-    description: Payment processing with Stripe
-    base: main
-    sessions:
-      - name: api
-        panes: 2
-        layout: even-horizontal
-        prompts:
-          - "npm run dev"
-          - "stripe listen --forward-to localhost:3001/webhook"
-    dependencies: [user-auth]  # Depends on auth being completed first
-
-settings:
-  parallel: true        # Create worktrees in parallel
-  auto_attach: false    # Don't auto-attach to sessions
+```json
+{
+  "orchestration": {
+    "version": "1.0",
+    "created": "2024-01-01T00:00:00Z",
+    "description": "E-commerce microservices architecture",
+    "features": [
+      {
+        "name": "user-auth",
+        "description": "OAuth2 authentication system",
+        "base": "main",
+        "sessions": [
+          {
+            "name": "backend",
+            "panes": 3,
+            "layout": "main-vertical",
+            "prompts": [
+              "npm run dev",
+              "npm test --watch",
+              "docker-compose logs -f auth"
+            ]
+          }
+        ],
+        "claudeContext": "Use Passport.js for OAuth2\nImplement JWT with refresh tokens",
+        "agents": ["code-reviewer", "security-scanner"],
+        "dependencies": []
+      },
+      {
+        "name": "payment-service",
+        "description": "Payment processing with Stripe",
+        "base": "main",
+        "sessions": [
+          {
+            "name": "api",
+            "panes": 2,
+            "layout": "even-horizontal",
+            "prompts": [
+              "npm run dev",
+              "stripe listen --forward-to localhost:3001/webhook"
+            ]
+          }
+        ],
+        "dependencies": ["user-auth"]
+      }
+    ],
+    "settings": {
+      "parallel": true,
+      "autoAttach": false
+    }
+  }
+}
 ```
 
 ### Key Concepts

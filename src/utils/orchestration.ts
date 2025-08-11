@@ -124,16 +124,16 @@ export async function customizeClaudeMd(
 
 This worktree is part of an orchestrated development plan.
 
-**Feature**: ${feature.feature}
+**Feature**: ${feature.name}
 **Description**: ${feature.description}
 
-${feature.claude_context || ''}
+${feature.claudeContext || ''}
 
 ### Sessions and Tasks
-${feature.sessions.map(s => `
+${feature.sessions?.map(s => `
 - **${s.name}** (${s.panes} panes):
 ${s.prompts.map((p, i) => `  - Pane ${i}: ${p.split('\n')[0]}`).join('\n')}
-`).join('\n')}
+`).join('\n') || 'No sessions configured'}
 
 ${feature.agents && feature.agents.length > 0 ? `
 ### Assigned Agents
@@ -149,12 +149,12 @@ Ensure these are completed first or coordinate with their implementations.
 ` : ''}
 
 ---
-*See MAESTRO.yml in the main branch for the complete orchestration plan.*
+*Orchestration plan stored in .maestro.json*
 `
   
   if (mode === 'split') {
     // Create new CLAUDE.md with orchestration context
-    const content = `# ${feature.feature} - Claude Code Instructions
+    const content = `# ${feature.name} - Claude Code Instructions
 
 ${orchestrationContext}
 
@@ -254,15 +254,15 @@ export async function createOrchestraSession(
   let worktreePath: string
   
   if (!options.skipWorktree) {
-    const branchName = feature.feature
+    const branchName = feature.name  // Changed from feature.feature
     worktreePath = await manager.createWorktree(branchName, feature.base || 'main')
   } else {
-    worktreePath = await manager.getWorktreePath(feature.feature)
+    worktreePath = await manager.getWorktreePath(feature.name)  // Changed from feature.feature
   }
   
   // Create tmux sessions
   for (const session of feature.sessions || []) {
-    const sessionName = await createTmuxSession(feature.feature, session, worktreePath)
+    const sessionName = await createTmuxSession(feature.name, session, worktreePath)  // Changed from feature.feature
     
     // Inject prompts
     if (session.prompts && session.prompts.length > 0) {
@@ -271,7 +271,7 @@ export async function createOrchestraSession(
   }
   
   // Create CLAUDE.md
-  if (feature.claude_context || feature.agents) {
+  if (feature.claudeContext || feature.agents) {  // Changed from claude_context
     await customizeClaudeMd(feature, worktreePath)
   }
 }

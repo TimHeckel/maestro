@@ -12,11 +12,11 @@ import { attachToTmuxWithProperTTY } from '../utils/tty.js'
 import { t } from '../i18n/index.js'
 
 export const orchestraCommand = new Command('orchestra')
-  .description('Manage and view orchestration status / オーケストレーションの管理と状態表示')
-  .option('-s, --status', 'Show detailed orchestration status / 詳細なステータス表示')
-  .option('-a, --attach', 'Interactively attach to a session / インタラクティブにセッションに接続')
-  .option('-v, --validate', 'Validate MAESTRO.yml / MAESTRO.ymlを検証')
-  .option('-l, --list', 'List all orchestrated sessions / すべてのセッションを一覧表示')
+  .description('Manage and view orchestration status')
+  .option('-s, --status', 'Show detailed orchestration status')
+  .option('-a, --attach', 'Interactively attach to a session')
+  .option('-v, --validate', 'Validate orchestration plan')
+  .option('-l, --list', 'List all orchestrated sessions')
   .exitOverride()
   .action(async (options: { status?: boolean; attach?: boolean; validate?: boolean; list?: boolean }) => {
     try {
@@ -63,39 +63,46 @@ export const orchestraCommand = new Command('orchestra')
 
 async function validateMaestro() {
   if (!(await maestroExists())) {
-    console.error(chalk.red('✖ MAESTRO.yml not found'))
+    console.error(chalk.red('✖ No orchestration plan found in .maestro.json'))
     console.log(chalk.gray('Run'), chalk.cyan('mst plan'), chalk.gray('to create an orchestration plan'))
     process.exit(1)
   }
   
   try {
     const config = await loadMaestroConfig()
-    console.log(chalk.green('✓ MAESTRO.yml is valid'))
-    console.log(chalk.gray(`  Version: ${config.version}`))
-    console.log(chalk.gray(`  Features: ${config.orchestra.length}`))
-    
-    const totalSessions = config.orchestra.reduce((sum, f) => sum + f.sessions.length, 0)
-    const totalPanes = config.orchestra.reduce((sum, f) => 
-      sum + f.sessions.reduce((s, session) => s + session.panes, 0), 0
-    )
-    
-    console.log(chalk.gray(`  Sessions: ${totalSessions}`))
-    console.log(chalk.gray(`  Total panes: ${totalPanes}`))
-    
-    // Check for dependencies
-    const hasDeps = config.orchestra.some(f => f.dependencies && f.dependencies.length > 0)
-    if (hasDeps) {
-      console.log(chalk.blue('  ✓ Dependencies defined'))
+    if (!config) {
+      console.error(chalk.red('✖ No orchestration plan found'))
+      process.exit(1)
     }
     
-    // Check for agents
-    const hasAgents = config.orchestra.some(f => f.agents && f.agents.length > 0)
-    if (hasAgents) {
-      console.log(chalk.blue('  ✓ Agents configured'))
+    console.log(chalk.green('✓ Orchestration plan is valid'))
+    console.log(chalk.gray(`  Version: ${config.version}`))
+    console.log(chalk.gray(`  Features: ${config.features?.length || 0}`))
+    
+    if (config.features) {
+      const totalSessions = config.features.reduce((sum, f) => sum + (f.sessions?.length || 0), 0)
+      const totalPanes = config.features.reduce((sum, f) => 
+        sum + (f.sessions?.reduce((s, session) => s + session.panes, 0) || 0), 0
+      )
+      
+      console.log(chalk.gray(`  Sessions: ${totalSessions}`))
+      console.log(chalk.gray(`  Total panes: ${totalPanes}`))
+      
+      // Check for dependencies
+      const hasDeps = config.features.some(f => f.dependencies && f.dependencies.length > 0)
+      if (hasDeps) {
+        console.log(chalk.blue('  ✓ Dependencies defined'))
+      }
+      
+      // Check for agents
+      const hasAgents = config.features.some(f => f.agents && f.agents.length > 0)
+      if (hasAgents) {
+        console.log(chalk.blue('  ✓ Agents configured'))
+      }
     }
     
   } catch (error) {
-    console.error(chalk.red('✖ MAESTRO.yml validation failed:'), error)
+    console.error(chalk.red('✖ Orchestration plan validation failed:'), error)
     process.exit(1)
   }
 }

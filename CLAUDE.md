@@ -101,18 +101,18 @@ This project follows TDD methodology:
 - `pnpm test:coverage` - Generate coverage report
 - `pnpm test:e2e` - Run end-to-end tests
 
-## Orchestration System (v5.3.0)
+## Orchestration System (v5.4.0)
 
 Maestro now includes a powerful orchestration system for planning and executing parallel development workflows:
 
 ### Commands
-- `mst plan` - Interactive planning session to create MAESTRO.yml
+- `mst plan` - AI-assisted planning (Claude by default, --manual for prompts)
 - `mst implement` - Execute the orchestration plan
 - `mst orchestra` - Manage and monitor orchestration
 
-### MAESTRO.yml
-The orchestration configuration file that defines:
-- Features to implement
+### Orchestration Storage (.maestro.json)
+The orchestration plan is stored in `.maestro.json` under the `orchestration` key:
+- Features to implement with sessions and prompts
 - tmux sessions and pane layouts
 - Initial prompts for each pane (pre-filled but not auto-executed)
 - Claude context and agent assignments
@@ -122,7 +122,8 @@ The orchestration configuration file that defines:
 - Uses `tmux send-keys` to inject prompts without executing
 - Creates worktrees in parallel or respecting dependencies
 - Customizes CLAUDE.md for each worktree with orchestration context
-- Tracks orchestration state in `.maestro/orchestra.state.json`
+- Stores orchestration plan in `.maestro.json` (v5.4.0+)
+- Tracks runtime state in `.maestro/orchestra.state.json`
 
 ### Requirements
 - tmux is required for orchestration features
@@ -130,13 +131,19 @@ The orchestration configuration file that defines:
 
 ## Recent Improvements (v5.4.0)
 
+### Unified Orchestration Configuration
+- **Single Config File**: Orchestration now stored in `.maestro.json` instead of separate MAESTRO.yml
+- **Hybrid Approach**: Stores orchestration config under `orchestration` key in existing `.maestro.json`
+- **Consistent Field Names**: Updated to use camelCase (e.g., `claudeContext` instead of `claude_context`)
+- **Backward Compatibility**: Conceptual "MAESTRO plan" name retained for user messaging
+
 ### Claude-First Orchestration Planning
 - **AI-Assisted Planning**: `mst plan` now defaults to Claude AI assistance
 - **Tickle Prompt System**: Sends special prompt that Claude recognizes for interactive planning
 - **Manual Mode Option**: Use `--manual` flag for traditional step-by-step prompts
 - **Project Detection**: Automatically detects project type (Node.js, Python, Go, etc.)
 - **Natural Conversation**: Plan orchestration through conversation instead of filling out forms
-- **Smart MAESTRO.yml Generation**: Claude analyzes codebase and suggests optimal parallel workflows
+- **Smart Plan Generation**: Claude analyzes codebase and suggests optimal parallel workflows
 
 ### How to Use Claude Planning
 ```bash

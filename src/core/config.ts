@@ -92,6 +92,55 @@ export const ConfigSchema = z.object({
       commands: z.array(z.string()).optional(),
     })
     .optional(),
+
+  // Orchestration configuration (v5.4.0+)
+  orchestration: z
+    .object({
+      // Orchestration plan version
+      version: z.string().default('1.0'),
+      // Plan creation timestamp
+      created: z.string().optional(),
+      // Overall orchestration description
+      description: z.string().optional(),
+      // Feature configurations
+      features: z.array(
+        z.object({
+          // Feature name (becomes branch/worktree name)
+          name: z.string(),
+          // Feature description
+          description: z.string(),
+          // Base branch (default: main)
+          base: z.string().default('main'),
+          // tmux session configurations
+          sessions: z.array(
+            z.object({
+              // Session name
+              name: z.string(),
+              // Number of panes
+              panes: z.number().min(1).max(30),
+              // tmux layout
+              layout: z.enum(['even-horizontal', 'even-vertical', 'main-horizontal', 'main-vertical', 'tiled']).optional(),
+              // Commands/prompts for each pane
+              prompts: z.array(z.string()),
+            })
+          ).optional(),
+          // Claude-specific context for this feature
+          claudeContext: z.string().optional(),
+          // Assigned Claude agents
+          agents: z.array(z.string()).optional(),
+          // Dependencies on other features
+          dependencies: z.array(z.string()).optional(),
+        })
+      ).optional(),
+      // Orchestration settings
+      settings: z.object({
+        // Create worktrees in parallel
+        parallel: z.boolean().default(true),
+        // Auto-attach to sessions after creation
+        autoAttach: z.boolean().default(false),
+      }).optional(),
+    })
+    .optional(),
 })
 
 export type Config = z.infer<typeof ConfigSchema>

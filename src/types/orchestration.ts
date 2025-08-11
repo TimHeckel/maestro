@@ -1,19 +1,18 @@
-// Orchestration type definitions for MAESTRO.yml
+// Orchestration type definitions for .maestro.json orchestration section
+// These match the Config['orchestration'] structure
 
-export interface MaestroConfig {
-  version: string
-  created: string
-  description?: string
-  orchestra: FeatureConfig[]
-  settings?: OrchestraSettings
-}
+import { Config } from '../core/config.js'
 
+// Re-export from Config for backward compatibility
+export type MaestroConfig = Config['orchestration']
+
+// Feature configuration (maps to features array items)
 export interface FeatureConfig {
-  feature: string
+  name: string  // Changed from 'feature' to 'name' to match schema
   description: string
-  branch_prefix?: string
-  sessions: SessionConfig[]
-  claude_context?: string
+  base?: string  // Base branch
+  sessions?: SessionConfig[]
+  claudeContext?: string  // Changed from claude_context
   agents?: string[]
   dependencies?: string[]
 }
@@ -26,10 +25,8 @@ export interface SessionConfig {
 }
 
 export interface OrchestraSettings {
-  parallel_creation?: boolean
-  auto_install_deps?: boolean
-  claude_md_mode?: 'shared' | 'split'
-  base_branch?: string
+  parallel?: boolean  // Changed from parallel_creation
+  autoAttach?: boolean  // Changed from auto_attach
 }
 
 // Runtime state tracking

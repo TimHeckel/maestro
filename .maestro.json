@@ -39,5 +39,65 @@
     "commands": [
       "pnpm install"
     ]
+  },
+  "orchestration": {
+    "version": "1.0",
+    "created": "2025-08-11T01:34:15.296Z",
+    "description": "Example orchestration for a full-stack feature",
+    "features": [
+      {
+        "name": "user-auth",
+        "description": "Complete authentication system",
+        "base": "main",
+        "sessions": [
+          {
+            "name": "backend",
+            "panes": 3,
+            "layout": "main-vertical",
+            "prompts": [
+              "# Implement OAuth2 endpoints in /api/auth",
+              "npm test --watch auth",
+              "npm run dev"
+            ]
+          },
+          {
+            "name": "frontend",
+            "panes": 2,
+            "layout": "even-horizontal",
+            "prompts": [
+              "# Create login/signup React components",
+              "npm test --watch"
+            ]
+          }
+        ],
+        "claudeContext": "## Authentication Implementation\n\n- Use Passport.js for OAuth2\n- Implement JWT with refresh tokens\n- Add rate limiting\n- Follow REST conventions",
+        "agents": [
+          "code-reviewer",
+          "security-scanner"
+        ]
+      },
+      {
+        "name": "payment",
+        "description": "Stripe payment integration",
+        "base": "main",
+        "sessions": [
+          {
+            "name": "api",
+            "panes": 2,
+            "prompts": [
+              "# Integrate Stripe checkout and webhooks",
+              "npm run stripe:listen"
+            ]
+          }
+        ],
+        "dependencies": [
+          "user-auth"
+        ]
+      }
+    ],
+    "settings": {
+      "parallel": true,
+      "autoAttach": false
+    }
   }
 }
