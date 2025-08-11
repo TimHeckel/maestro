@@ -1,5 +1,41 @@
 # Changelog
 
+## 5.4.0
+
+### Minor Changes
+
+- Claude-first orchestration planning with AI assistance
+
+  ## New Features
+
+  ### AI-Powered Planning
+  - **Default Claude Mode** - `mst plan` now uses Claude AI by default
+  - **Tickle Prompt System** - Sends special prompt that Claude recognizes
+  - **Natural Conversation** - Plan through discussion instead of filling forms
+  - **Project Detection** - Automatically detects project type (Node.js, Python, Go, etc.)
+  - **Manual Mode Option** - Use `--manual` flag for traditional step-by-step prompts
+  
+  ### Enhanced Help System
+  - Comprehensive help with `mst plan --help`
+  - Clear examples and mode explanations
+  - tmux requirement documentation
+
+  ### Breaking Changes
+  - `mst plan` now defaults to Claude mode instead of interactive prompts
+  - Use `mst plan --manual` for the previous behavior
+
+  ### Example Usage
+  ```bash
+  # Default: Claude helps you plan
+  mst plan
+  
+  # Traditional prompts
+  mst plan --manual
+  
+  # See all options
+  mst plan --help
+  ```
+
 ## 5.3.0
 
 ### Minor Changes

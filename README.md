@@ -21,6 +21,7 @@ https://github.com/user-attachments/assets/6415804a-3dd0-48ac-91eb-1c3adad70ae7
 - [Updating](#updating)
 - [Requirements](#requirements)
 - [Quick Start](#quick-start)
+- [Orchestration Mode 🎭](#orchestration-mode--ai-powered-parallel-development-v540)
 - [Command Reference](#command-reference)
 - [Advanced Features](#advanced-features)
 - [Configuration](#configuration)
